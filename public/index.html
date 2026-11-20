@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b9be0">
+<title>Rabisco Mágico</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="phone" id="phone">
+  <div class="app" id="app">
+
+    <!-- Drawing screen -->
+    <section class="screen screen-draw" id="screen-draw">
+      <header class="topbar">
+        <h1 data-i18n="title">Rabisco Mágico</h1>
+        <div class="top-actions">
+          <select id="lang-picker" aria-label="Idioma / Language / Idioma">
+            <option value="pt">PT</option>
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+          </select>
+          <button id="btn-undo" class="icon-btn" aria-label="Desfazer" title="Desfazer">↩️</button>
+          <button id="btn-clear" class="icon-btn" aria-label="Limpar tudo" title="Limpar tudo">🗑️</button>
+          <button id="btn-gallery" class="icon-btn" aria-label="Galeria" title="Galeria">🖼️</button>
+        </div>
+      </header>
+
+      <div class="board-wrap">
+        <canvas id="board" aria-label="Quadro de desenho"></canvas>
+        <p class="hint" id="hint" data-i18n="hint">Desenhe com o dedo! Depois toque em Transformar</p>
+      </div>
+
+      <div class="tray">
+        <div class="palette" id="palette" role="group" aria-label="Cores"></div>
+        <div class="brushes" id="brushes" role="group" aria-label="Pincéis">
+          <button data-size="6" aria-label="Pincel fino">●</button>
+          <button data-size="14" class="active" aria-label="Pincel médio">●</button>
+          <button data-size="28" aria-label="Pincel grosso">●</button>
+          <button id="btn-eraser" aria-label="Borracha">🧽</button>
+        </div>
+        <button id="btn-transform" class="transform-btn" data-i18n="transform">✨ Transformar</button>
+      </div>
+      <p class="clear-warn" id="clear-warn" hidden data-i18n="clearWarn">Toque de novo para apagar tudo</p>
+    </section>
+
+    <!-- Loading screen -->
+    <section class="screen screen-loading" id="screen-loading" hidden>
+      <div class="wand" aria-hidden="true">🪄</div>
+      <p data-i18n="loading">Fazendo mágica… Estou descobrindo o que você desenhou</p>
+    </section>
+
+    <!-- Result screen -->
+    <section class="screen screen-result" id="screen-result" hidden>
+      <h2 id="result-title"></h2>
+      <p id="result-phrase"></p>
+      <div class="result-image-wrap">
+        <img id="result-image" alt="Desenho transformado">
+        <img id="result-thumb" class="thumb" alt="Desenho original">
+      </div>
+      <div class="result-actions">
+        <button id="btn-download" class="btn btn-primary" data-i18n="download">Baixar</button>
+        <button id="btn-share" class="btn btn-share" data-i18n="share">Compartilhar</button>
+      </div>
+      <div class="result-actions secondary">
+        <button id="btn-again" class="btn" data-i18n="drawAnother">Desenhar outro</button>
+        <button id="btn-continue" class="btn" data-i18n="continue">Continuar</button>
+      </div>
+      <p class="error" id="result-error" hidden></p>
+    </section>
+
+    <!-- Gallery screen -->
+    <section class="screen screen-gallery" id="screen-gallery" hidden>
+      <header class="topbar">
+        <h1 data-i18n="galleryTitle">Galeria</h1>
+        <button id="btn-gallery-back" class="icon-btn" aria-label="Voltar">←</button>
+      </header>
+      <div class="gallery-grid" id="gallery-grid"></div>
+      <p class="gallery-empty" id="gallery-empty" data-i18n="galleryEmpty">Suas obras transformadas aparecem aqui.</p>
+    </section>
+
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
