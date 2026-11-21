@@ -394,6 +394,24 @@ app.get("/api/parent/me", (req, res) => {
   });
 });
 
+// Free-transform quota for the caller, so the drawing screen can show
+// how many free transforms are left. Same account resolution as
+// POST /api/transform: a signed-in parent's account wins, otherwise the
+// anonymous device id (x-account-id header). Returns counts only — no
+// account ids, emails or keys. Paid plans have a separate entitlement;
+// this endpoint reports the 5-free quota only.
+app.get("/api/quota", (req, res) => {
+  const parent = parentAccount(req);
+  const account = parent ? parent.id : accountId(req);
+  const record = usage.get(account) || { used: 0 };
+  return res.json({
+    ok: true,
+    freeTotal: FREE_TRANSFORMS,
+    used: record.used,
+    left: Math.max(0, FREE_TRANSFORMS - record.used),
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Stripe checkout (test mode only) — parents only, behind the parental gate
 // ---------------------------------------------------------------------------

@@ -115,6 +115,14 @@ body {
   box-shadow: 0 4px 0 rgba(0,0,0,.2);
 }
 .transform-btn:active { transform: translateY(3px); box-shadow: none; }
+/* Free-transforms-left line under the Transform button, and the small
+ * parent-facing footer link to the landing page (About & pricing). */
+.quota { text-align: center; color: #fff; font-weight: 600; font-size: 15px; }
+.quota:empty { display: none; }
+.app-footer { text-align: center; padding: 0 16px 14px; }
+.app-footer a { color: #fff; font-weight: 600; }
+/* The Parents button carries a word, not just a lock, so a parent can find sign-in. */
+.parents-btn { font-size: 16px; font-weight: 700; padding: 0 10px; }
 .clear-warn { text-align: center; color: #fff; font-weight: 600; padding-bottom: 12px; }
 
 .screen-loading { align-items: center; justify-content: center; gap: 20px; padding: 32px; text-align: center; }

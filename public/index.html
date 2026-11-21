@@ -29,7 +29,7 @@
           <button id="btn-undo" class="icon-btn" aria-label="Desfazer" title="Desfazer">↩️</button>
           <button id="btn-clear" class="icon-btn" aria-label="Limpar tudo" title="Limpar tudo">🗑️</button>
           <button id="btn-gallery" class="icon-btn" aria-label="Galeria" title="Galeria">🖼️</button>
-          <button id="btn-parents" class="icon-btn" aria-label="Área dos pais" title="Área dos pais">🔒</button>
+          <button id="btn-parents" class="icon-btn parents-btn" aria-label="Área dos pais" title="Área dos pais">🔒 <span data-i18n="parents">Pais</span></button>
         </div>
       </header>
 
@@ -47,8 +47,10 @@
           <button id="btn-eraser" aria-label="Borracha" aria-pressed="false">🧽</button>
         </div>
         <button id="btn-transform" class="transform-btn" data-i18n="transform">✨ Transformar</button>
+        <p class="quota" id="quota-line" aria-live="polite"></p>
       </div>
       <p class="clear-warn" id="clear-warn" hidden data-i18n="clearWarn">Toque de novo para apagar tudo</p>
+      <footer class="app-footer"><a href="landing.html" data-i18n="aboutPricing">Sobre e preços</a></footer>
     </section>
 
     <!-- Loading screen -->

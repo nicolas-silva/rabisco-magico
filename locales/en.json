@@ -11,9 +11,11 @@
     "transform": "✨ Transform"
   },
   "app": {
+    "aboutPricing": "About & pricing",
     "hint": "Draw with your finger! Then tap Transform",
     "languageLabel": "Language",
     "madeForMobile": "Made for phones",
+    "parents": "Parents",
     "title": "Rabisco Mágico"
   },
   "errors": {

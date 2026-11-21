@@ -23,6 +23,7 @@ const I18N = {
     galleryFavouritesOnly: "⭐ Só favoritas",
     empty: "Desenhe alguma coisa primeiro!", failed: "Ops, a mágica falhou. Tente de novo!",
     parentsTitle: "Área dos pais", gateIntro: "Só para adultos: responda para continuar.",
+    parents: "Pais", aboutPricing: "Sobre e preços",
     gateWrong: "Ops, tente outra pergunta!",
     parentIntro: "Entre com seu e-mail para gerenciar o plano e a galeria.",
     parentEmail: "E-mail", sendLink: "Enviar link de acesso",
@@ -53,6 +54,7 @@ const I18N = {
     galleryFavouritesOnly: "⭐ Favourites only",
     empty: "Draw something first!", failed: "Oops, the magic failed. Try again!",
     parentsTitle: "Parents' area", gateIntro: "Adults only: answer to continue.",
+    parents: "Parents", aboutPricing: "About & pricing",
     gateWrong: "Oops, try another question!",
     parentIntro: "Sign in with your email to manage the plan and gallery.",
     parentEmail: "Email", sendLink: "Send sign-in link",
@@ -83,6 +85,7 @@ const I18N = {
     galleryFavouritesOnly: "⭐ Solo favoritas",
     empty: "¡Dibuja algo primero!", failed: "¡Ups, la magia falló! Inténtalo de nuevo.",
     parentsTitle: "Área de padres", gateIntro: "Solo para adultos: responde para continuar.",
+    parents: "Padres", aboutPricing: "Acerca de y precios",
     gateWrong: "¡Ups, intenta otra pregunta!",
     parentIntro: "Inicia sesión con tu correo para gestionar el plan y la galería.",
     parentEmail: "Correo electrónico", sendLink: "Enviar enlace de acceso",
@@ -129,6 +132,32 @@ function applyLanguage() {
   $("lang-picker").value = lang;
   $("gallery-search").placeholder = I18N[lang].gallerySearch;
   updateFavouritesFilterLabel();
+  renderQuota();
+}
+
+// ---------------------------------------------------------------------------
+// Visible free-transform quota: "5 free magic turns left" under the
+// Transform button, refreshed on load, on language change and after each
+// transform. Best-effort — if the quota call fails, the line stays hidden
+// and transforming still works.
+// ---------------------------------------------------------------------------
+let quotaLeft = null;
+function renderQuota() {
+  const el = $("quota-line");
+  if (!el) return;
+  el.textContent = quotaLeft === null ? "" : quotaLeft + " " + I18N[lang].freeLeft;
+}
+async function refreshQuota() {
+  try {
+    const res = await fetch("/api/quota", {
+      headers: parentSession() ? { "x-parent-session": parentSession() } : {},
+    });
+    const data = await res.json();
+    if (data.ok && typeof data.left === "number") {
+      quotaLeft = data.left;
+      renderQuota();
+    }
+  } catch (_e) { /* line stays hidden; transforms still work */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -349,6 +378,7 @@ $("btn-transform").addEventListener("click", async () => {
   } finally {
     $("btn-transform").disabled = false;
     $("btn-transform").removeAttribute("aria-busy");
+    refreshQuota();
   }
 });
 
@@ -771,4 +801,5 @@ $("lang-picker").addEventListener("change", (e) => {
 });
 lang = detectLanguage();
 applyLanguage();
+refreshQuota();
 resizeCanvas();

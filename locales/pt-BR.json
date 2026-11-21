@@ -11,9 +11,11 @@
     "transform": "✨ Transformar"
   },
   "app": {
+    "aboutPricing": "Sobre e preços",
     "hint": "Desenhe com o dedo! Depois toque em Transformar",
     "languageLabel": "Idioma",
     "madeForMobile": "Feito para celular",
+    "parents": "Pais",
     "title": "Rabisco Mágico"
   },
   "errors": {
