@@ -347,6 +347,14 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true, falConfigured: Boolean(FAL_KEY), visionConfigured: Boolean(VISION_API_KEY) });
 });
 
+// Hydrate parent accounts from the durable store on first use. On a
+// cold serverless instance this loads the persisted accounts/tokens
+// before any parent route runs; afterwards it is a no-op. Static files
+// and /api/health above do not need it.
+app.use((req, res, next) => {
+  accounts.init().then(() => next()).catch(() => next());
+});
+
 // Resolve the parent account from the session token, if the device sent one.
 function parentAccount(req) {
   const token = req.get("x-parent-session");
@@ -364,21 +372,23 @@ function requireParent(req, res) {
 }
 
 // ---------------------------------------------------------------------------
-// Parent accounts (magic-link stub — no email is sent in this build)
+// Parent accounts (magic link by email — lib/email.js; stub when no
+// RESEND_API_KEY is configured, in which case the parent pastes the
+// token from the code field instead).
 // ---------------------------------------------------------------------------
-app.post("/api/parent/signup", (req, res) => {
+app.post("/api/parent/signup", async (req, res) => {
   try {
-    const result = accounts.requestMagicLink(req.body && req.body.email);
-    // The token is NEVER returned here — it is logged server-side only
-    // until a real email provider is wired.
-    return res.json({ ok: true, emailSent: result.emailSent, stub: true });
+    const result = await accounts.requestMagicLink(req.body && req.body.email, langOf(req));
+    // The token is NEVER returned here — it travels by email (or, in
+    // stub mode, via the test-only helper / pasted code field).
+    return res.json({ ok: true, emailSent: result.emailSent, stub: result.stub });
   } catch (err) {
     return res.status(400).json({ ok: false, error: "invalid_email" });
   }
 });
 
-app.post("/api/parent/verify", (req, res) => {
-  const result = accounts.verifyMagicLink(req.body && req.body.token);
+app.post("/api/parent/verify", async (req, res) => {
+  const result = await accounts.verifyMagicLink(req.body && req.body.token);
   if (!result) return res.status(401).json({ ok: false, error: "invalid_token" });
   return res.json({ ok: true, sessionToken: result.sessionToken, account: result.account });
 });

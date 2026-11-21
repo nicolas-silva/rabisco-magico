@@ -28,7 +28,8 @@ const I18N = {
     parentIntro: "Entre com seu e-mail para gerenciar o plano e a galeria.",
     parentEmail: "E-mail", sendLink: "Enviar link de acesso",
     linkSent: "Enviamos um link para o seu e-mail. Toque nele para entrar.",
-    tokenLabel: "Código do link (enquanto o e-mail não está ligado)",
+    linkSentStub: "O envio de e-mail ainda não está configurado — peça o código ao responsável pelo app.",
+    tokenLabel: "Ou cole o código do link aqui",
     verifyToken: "Entrar com o código", signInFirst: "Informe um e-mail válido.",
     invalidToken: "Código inválido ou expirado. Peça outro link.",
     planFree: "Plano gratuito", planFamily: "Plano Família", planPack: "Pacote Mágico",
@@ -59,7 +60,8 @@ const I18N = {
     parentIntro: "Sign in with your email to manage the plan and gallery.",
     parentEmail: "Email", sendLink: "Send sign-in link",
     linkSent: "We sent a link to your email. Tap it to sign in.",
-    tokenLabel: "Link code (while email sending is not wired yet)",
+    linkSentStub: "Email sending is not set up yet — ask whoever runs the app for the code.",
+    tokenLabel: "Or paste the code from the link here",
     verifyToken: "Sign in with the code", signInFirst: "Please enter a valid email.",
     invalidToken: "Invalid or expired code. Ask for a new link.",
     planFree: "Free plan", planFamily: "Family plan", planPack: "Magic Pack",
@@ -90,7 +92,8 @@ const I18N = {
     parentIntro: "Inicia sesión con tu correo para gestionar el plan y la galería.",
     parentEmail: "Correo electrónico", sendLink: "Enviar enlace de acceso",
     linkSent: "Te enviamos un enlace a tu correo. Tócalo para entrar.",
-    tokenLabel: "Código del enlace (mientras el correo no está conectado)",
+    linkSentStub: "El envío de correo aún no está configurado — pide el código a quien gestiona la app.",
+    tokenLabel: "O pega el código del enlace aquí",
     verifyToken: "Entrar con el código", signInFirst: "Escribe un correo válido.",
     invalidToken: "Código inválido o vencido. Pide otro enlace.",
     planFree: "Plan gratuito", planFamily: "Plan Familiar", planPack: "Paquete Mágico",
@@ -693,32 +696,66 @@ $("btn-send-link").addEventListener("click", async () => {
     });
     const data = await res.json();
     if (!data.ok) throw new Error("signup failed");
-    $("link-sent").hidden = false;
-    $("parent-error").hidden = true;
+    if (data.emailSent) {
+      $("link-sent").hidden = false;
+      $("parent-error").hidden = true;
+    } else {
+      // No email provider configured: say so honestly instead of
+      // claiming a link was sent.
+      $("link-sent").hidden = true;
+      $("parent-error").textContent = I18N[lang].linkSentStub;
+      $("parent-error").hidden = false;
+    }
   } catch (_e) {
     $("parent-error").textContent = I18N[lang].failed;
     $("parent-error").hidden = false;
   }
 });
 
+async function verifyToken(token) {
+  const res = await fetch("/api/parent/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error("invalid token");
+  setParentSession(data.sessionToken);
+  renderParentPanel();
+  return true;
+}
+
 $("btn-verify-token").addEventListener("click", async () => {
   const token = $("parent-token").value.trim();
   if (!token) return;
   try {
-    const res = await fetch("/api/parent/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    });
-    const data = await res.json();
-    if (!data.ok) throw new Error("invalid token");
-    setParentSession(data.sessionToken);
-    renderParentPanel();
+    await verifyToken(token);
   } catch (_e) {
     $("parent-error").textContent = I18N[lang].invalidToken;
     $("parent-error").hidden = false;
   }
 });
+
+// Magic-link sign-in: a parent who taps the emailed link lands here with
+// ?token=... — verify it, store the session, strip the token from the
+// URL (it is a credential and must not linger in history or bookmarks),
+// and open the parent panel. The paste-the-code path above still works.
+async function handleMagicLinkToken() {
+  let token = "";
+  try { token = new URLSearchParams(window.location.search).get("token") || ""; }
+  catch (_e) { return; }
+  if (!token) return;
+  try { window.history.replaceState({}, "", window.location.pathname); } catch (_e) { /* ignore */ }
+  try {
+    await verifyToken(token);
+    show("screen-parents");
+  } catch (_e) {
+    renderParentPanel();
+    show("screen-parents");
+    $("parent-error").textContent = I18N[lang].invalidToken;
+    $("parent-error").hidden = false;
+  }
+}
 
 async function startCheckout(product, billing) {
   try {
@@ -802,4 +839,5 @@ $("lang-picker").addEventListener("change", (e) => {
 lang = detectLanguage();
 applyLanguage();
 refreshQuota();
+handleMagicLinkToken();
 resizeCanvas();
