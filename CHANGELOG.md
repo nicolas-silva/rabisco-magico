@@ -11,6 +11,9 @@ First build: a mobile-only web app for children aged about 4–10.
 A child draws with a finger, taps Transformar, and gets back a
 realistic AI scene interpreting the drawing.
 
+Deployed to Vercel at https://rabisco-magico.vercel.app/ (production,
+auto-deploys from `main`; `FAL_KEY` set as a sensitive env var).
+
 ### Added — core app (Batch 1)
 
 - Drawing board (PWA, `public/index.html` / `styles.css` / `app.js`):
