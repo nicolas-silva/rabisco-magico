@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "language": "en",
+    "note": "Translated from pt-BR. Child-facing phrases should be checked by a native English speaker who works with young children — a technically correct phrase can still sound flat to a 5-year-old."
+  },
+  "actions": {
+    "continue": "Keep drawing",
+    "download": "Download",
+    "drawAnother": "Draw another",
+    "share": "Share",
+    "transform": "✨ Transform"
+  },
+  "app": {
+    "hint": "Draw with your finger! Then tap Transform",
+    "languageLabel": "Language",
+    "madeForMobile": "Made for phones",
+    "title": "Rabisco Mágico"
+  },
+  "errors": {
+    "busy": "I'm already doing some magic! Wait a moment.",
+    "denied": "Magic needs permission to continue.",
+    "empty": "Draw something first!",
+    "failed": "Oops, the magic failed. Try again!",
+    "notConfigured": "The magic isn't switched on yet. Ask a grown-up to check.",
+    "quota": "Your 5 free magic turns are used up! Ask a grown-up to continue.",
+    "rateLimit": "Too much magic! Wait a little and try again."
+  },
+  "fallback": {
+    "phrase": "Look what your drawing turned into!",
+    "title": "My magic drawing"
+  },
+  "gallery": {
+    "empty": "Your transformed artworks will appear here.",
+    "title": "Gallery",
+    "search": "Search by title…",
+    "favourites": "⭐ Favourites",
+    "favouritesOnly": "⭐ Favourites only"
+  },
+  "landing": {
+    "cta": "✨ Start drawing",
+    "headline": "First 5 transformations free",
+    "noAds": "No ads",
+    "noDataSelling": "No data selling",
+    "subheadline": "Your child's drawing becomes a real picture."
+  },
+  "loading": "Doing magic… I'm finding out what you drew",
+  "needsNativeCheck": [
+    "loading",
+    "errors.quota",
+    "errors.busy",
+    "fallback.phrase",
+    "landing.subheadline"
+  ],
+  "toolbar": {
+    "back": "Back",
+    "board": "Drawing board",
+    "brushFine": "Fine brush",
+    "brushMedium": "Medium brush",
+    "brushThick": "Thick brush",
+    "clearAll": "Clear all",
+    "clearWarn": "Tap again to erase everything",
+    "colours": "Colours",
+    "eraser": "Eraser",
+    "gallery": "Gallery",
+    "undo": "Undo"
+  }
+}

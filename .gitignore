@@ -1,3 +1,9 @@
 .env
 node_modules/
 dist/
+benchmark/drawings/
+benchmark/drawings-synthetic/
+benchmark/dry-run-results.csv
+benchmark/dry-run-report.md
+data/
+overnight

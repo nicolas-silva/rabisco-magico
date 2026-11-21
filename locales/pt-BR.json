@@ -1,0 +1,61 @@
+{
+  "_meta": {
+    "language": "pt-BR",
+    "note": "Fonte principal. Frases para crianças marcadas com needsNativeCheck=false em pt-BR (idioma nativo do produto), mas qualquer frase nova precisa de revisão antes de ir para a versão final."
+  },
+  "actions": {
+    "continue": "Continuar",
+    "download": "Baixar",
+    "drawAnother": "Desenhar outro",
+    "share": "Compartilhar",
+    "transform": "✨ Transformar"
+  },
+  "app": {
+    "hint": "Desenhe com o dedo! Depois toque em Transformar",
+    "languageLabel": "Idioma",
+    "madeForMobile": "Feito para celular",
+    "title": "Rabisco Mágico"
+  },
+  "errors": {
+    "busy": "Já estou fazendo uma mágica! Espere um pouquinho.",
+    "denied": "Precisa permitir a mágica para continuar.",
+    "empty": "Desenhe alguma coisa primeiro!",
+    "failed": "Ops, a mágica falhou. Tente de novo!",
+    "notConfigured": "A mágica ainda não está ligada. Peça para um adulto verificar.",
+    "quota": "Suas 5 magias grátis acabaram! Peça para um adulto continuar.",
+    "rateLimit": "Muita mágica! Espere um pouquinho e tente de novo."
+  },
+  "fallback": {
+    "phrase": "Olha só o que o seu desenho virou!",
+    "title": "Meu desenho mágico"
+  },
+  "gallery": {
+    "empty": "Suas obras transformadas aparecem aqui.",
+    "title": "Galeria",
+    "search": "Buscar pelo título…",
+    "favourites": "⭐ Favoritas",
+    "favouritesOnly": "⭐ Só favoritas"
+  },
+  "landing": {
+    "cta": "✨ Começar a desenhar",
+    "headline": "As 5 primeiras transformações são grátis",
+    "noAds": "Sem anúncios",
+    "noDataSelling": "Sem venda de dados",
+    "subheadline": "O desenho do seu filho vira uma imagem de verdade."
+  },
+  "loading": "Fazendo mágica… Estou descobrindo o que você desenhou",
+  "needsNativeCheck": [],
+  "toolbar": {
+    "back": "Voltar",
+    "board": "Quadro de desenho",
+    "brushFine": "Pincel fino",
+    "brushMedium": "Pincel médio",
+    "brushThick": "Pincel grosso",
+    "clearAll": "Limpar tudo",
+    "clearWarn": "Toque de novo para apagar tudo",
+    "colours": "Cores",
+    "eraser": "Borracha",
+    "gallery": "Galeria",
+    "undo": "Desfazer"
+  }
+}

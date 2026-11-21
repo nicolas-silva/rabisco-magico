@@ -1,12 +1,35 @@
-/* Rabisco Mágico — styles. Mobile portrait first; desktop gets a phone frame. */
+/* Rabisco Mágico — styles. Mobile portrait first; desktop gets a phone frame.
+ * Contrast (Batch 5 audit, WCAG 2.2 AA): white text sits on --sky-deep
+ * (#1770a8, 5.36:1), never on the bright --sky (#2b9be0, 3.06:1 — large
+ * text only). White text sits on --coral-deep (#c93a2c, 5.09:1), never
+ * on bright coral (2.8:1). Error/parent notes are ink text on a pale
+ * yellow banner (10.32:1), never yellow text on blue (2.37:1). The hint
+ * on white is #54616d (6.35:1), not #7a8a96 (3.56:1). */
 :root {
   --sky: #2b9be0;
+  --sky-deep: #1770a8;
   --sun: #ffc93c;
   --coral: #ff6b5b;
+  --coral-deep: #c93a2c;
   --ink: #10324a;
+  --hint: #54616d;
   --radius: 24px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* Keyboard focus must always be visible: ink ring + sun halo reads on
+ * both the white canvas and the deep-sky background. */
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--sun);
+}
+/* Skip link: hidden until keyboard focus, jumps to the Transform button. */
+.skip-link {
+  position: absolute; left: 16px; top: -100px; z-index: 10;
+  background: #fff; color: var(--ink); font-weight: 700;
+  padding: 12px 16px; border-radius: 12px;
+}
+.skip-link:focus { top: 12px; }
 html, body { height: 100%; }
 body {
   font-family: "Fredoka", system-ui, sans-serif;
@@ -17,7 +40,7 @@ body {
 .phone { height: 100dvh; display: flex; justify-content: center; }
 .app {
   width: 100%; max-width: 480px; height: 100dvh;
-  background: var(--sky);
+  background: var(--sky-deep);
   display: flex; flex-direction: column;
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
@@ -32,7 +55,8 @@ body {
   .phone::after {
     content: "Feito para celular";
     position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
-    color: #fff; opacity: .85; font-weight: 600;
+    color: var(--ink); background: #fff; font-weight: 600;
+    padding: 6px 14px; border-radius: 999px;
   }
 }
 .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
@@ -61,7 +85,7 @@ body {
 }
 .hint {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  text-align: center; padding: 0 32px; color: #7a8a96; font-size: 20px; font-weight: 600;
+  text-align: center; padding: 0 32px; color: var(--hint); font-size: 20px; font-weight: 600;
   pointer-events: none;
 }
 .hint[hidden] { display: none; }
@@ -70,7 +94,7 @@ body {
 .palette { display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px; scrollbar-width: none; }
 .palette::-webkit-scrollbar { display: none; }
 .swatch {
-  flex: 0 0 auto; width: 40px; height: 40px; border-radius: 50%;
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 50%;
   border: 3px solid #fff; cursor: pointer; box-shadow: 0 2px 0 rgba(0,0,0,.15);
 }
 .swatch.active { width: 48px; height: 48px; outline: 3px solid var(--sun); }
@@ -97,7 +121,15 @@ body {
 .screen-loading p { color: #fff; font-size: 22px; font-weight: 600; }
 .wand { font-size: 72px; animation: wave 1.2s ease-in-out infinite; }
 @keyframes wave { 0%,100% { transform: rotate(-12deg); } 50% { transform: rotate(14deg); } }
-@media (prefers-reduced-motion: reduce) { .wand { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .wand { animation: none; }
+}
 
 .screen-result { padding: 16px; gap: 12px; overflow-y: auto; }
 .screen-result h2 { color: #fff; font-size: 26px; text-align: center; }
@@ -118,11 +150,41 @@ body {
 }
 .btn:active { transform: translateY(3px); box-shadow: none; }
 .btn-primary { background: var(--sun); }
-.btn-share { background: var(--coral); color: #fff; }
-.error { color: #ffe08a; font-weight: 600; }
+.btn-share { background: var(--coral-deep); color: #fff; }
+.error {
+  color: var(--ink); background: #ffe08a; font-weight: 600;
+  padding: 8px 12px; border-radius: 12px;
+}
 
+.gallery-tools { display: flex; gap: 10px; padding: 0 16px 12px; }
+.gallery-search { flex: 1; }
+.gallery-fav-filter { flex: 0 0 auto; min-height: 52px; font-size: 16px; padding: 0 14px; }
+.gallery-fav-filter.active { background: var(--sun); }
 .gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 16px 16px; overflow-y: auto; }
-.gallery-grid figure { background: #fff; border-radius: 16px; overflow: hidden; cursor: pointer; }
+.gallery-grid figure { background: #fff; border-radius: 16px; overflow: hidden; cursor: pointer; position: relative; }
+.gallery-grid figure.favourite { outline: 3px solid var(--sun); }
+.gallery-grid .fav-btn {
+  position: absolute; top: 8px; right: 8px; width: 44px; height: 44px;
+  border: none; border-radius: 50%; background: rgba(255,255,255,.92);
+  font-size: 22px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.3);
+}
 .gallery-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
 .gallery-grid figcaption { padding: 8px; font-weight: 600; font-size: 14px; text-align: center; }
 .gallery-empty { color: #fff; text-align: center; padding: 32px; font-size: 18px; }
+
+/* Parental gate + parent panel (adults only). */
+.gate-body, .parent-panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.gate-body p, .parent-panel p { color: #fff; font-size: 18px; }
+.gate-question { font-size: 40px; font-weight: 700; text-align: center; color: var(--sun); }
+.gate-answers { display: flex; gap: 10px; justify-content: center; }
+.gate-answer { flex: 0 0 84px; }
+.field-label { color: #fff; font-weight: 600; font-size: 16px; }
+.field {
+  min-height: 52px; border: none; border-radius: 14px; padding: 0 14px;
+  font-family: inherit; font-size: 17px; color: var(--ink); width: 100%;
+}
+.parent-status { font-weight: 700; }
+.parent-note { color: var(--ink); background: #ffe08a; font-weight: 600; padding: 8px 12px; border-radius: 12px; }
+.btn-danger { background: var(--coral-deep); color: #fff; }
+#parent-signed-in, #parent-signed-out { display: flex; flex-direction: column; gap: 12px; }
+#parent-signed-in[hidden], #parent-signed-out[hidden] { display: none; }

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rabisco Mágico — O desenho do seu filho vira uma imagem de verdade</title>
+<meta name="description" content="A criança desenha com o dedo e o Rabisco Mágico transforma o desenho numa cena realista. As 5 primeiras transformações são grátis. Sem anúncios, sem dados de crianças.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --sky:#2b9be0; --sun:#ffc93c; --coral:#ff6b5b; --ink:#10324a; --bg:#f4fafe; --card:#fff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:"Fredoka",system-ui,sans-serif; color:var(--ink); background:var(--bg); line-height:1.55; }
+  header { background:var(--sky); color:#fff; padding:18px 20px 40px; text-align:center; }
+  header h1 { margin:8px 0 4px; font-size:2rem; }
+  header p { margin:0 auto; max-width:560px; opacity:.95; }
+  .lang { text-align:right; max-width:960px; margin:0 auto; }
+  .lang button { background:rgba(255,255,255,.25); color:#fff; border:1px solid #fff; border-radius:999px; padding:6px 12px; font:inherit; cursor:pointer; }
+  .lang button[aria-pressed="true"] { background:#fff; color:var(--sky); }
+  main { max-width:960px; margin:-24px auto 0; padding:0 16px 48px; }
+  .card { background:var(--card); border-radius:24px; padding:28px 24px; box-shadow:0 8px 24px rgba(16,50,74,.12); margin-bottom:20px; }
+  h2 { margin-top:0; font-size:1.4rem; }
+  .cta { display:inline-block; background:var(--sun); color:var(--ink); font-weight:700; font-size:1.1rem; padding:14px 26px; border-radius:999px; text-decoration:none; box-shadow:0 4px 0 rgba(16,50,74,.2); }
+  .cta:active { transform:translateY(2px); box-shadow:none; }
+  .steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .step { background:#eaf6fe; border-radius:16px; padding:16px; }
+  .step b { font-size:2rem; display:block; }
+  .before-after { display:grid; grid-template-columns:1fr 1fr; gap:14px; text-align:center; }
+  .before-after figure { margin:0; background:#fff; border:2px dashed var(--sky); border-radius:16px; padding:20px 10px; }
+  .before-after figcaption { font-weight:600; margin-top:8px; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid #e3eef5; }
+  .price { font-weight:700; white-space:nowrap; }
+  .badge { display:inline-block; background:var(--sun); border-radius:999px; padding:2px 10px; font-size:.85rem; font-weight:700; }
+  footer { text-align:center; color:#5b7a8c; font-size:.9rem; padding:0 16px 32px; }
+  [data-en] { display:none; }
+  html[lang="en"] [data-en] { display:inline; }
+  html[lang="en"] [data-pt] { display:none; }
+  html[lang="en"] .block-en { display:block; }
+  html[lang="en"] .block-pt { display:none; }
+  .block-en { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="lang">
+    <button id="btn-pt" aria-pressed="true" onclick="setLang('pt')">Português</button>
+    <button id="btn-en" aria-pressed="false" onclick="setLang('en')">English</button>
+  </div>
+  <h1>🪄 Rabisco Mágico</h1>
+  <p data-pt>O desenho do seu filho vira uma imagem de verdade.</p>
+  <p data-en>Your child's drawing becomes a real picture.</p>
+</header>
+<main>
+  <section class="card" style="text-align:center">
+    <h2>
+      <span data-pt>As 5 primeiras transformações são grátis</span>
+      <span data-en>First 5 transformations free</span>
+    </h2>
+    <p class="block-pt">Sem cartão, sem cadastro de criança. É só desenhar e ver a mágica acontecer.</p>
+    <p class="block-en">No card, no child sign-up. Just draw and watch the magic happen.</p>
+    <p><a class="cta" href="index.html"><span data-pt>✨ Começar a desenhar</span><span data-en>✨ Start drawing</span></a></p>
+    <p><small><span data-pt>Para crianças de 4 a 10 anos. Feito para celular.</span><span data-en>For children aged 4–10. Made for phones.</span></small></p>
+  </section>
+
+  <section class="card">
+    <h2><span data-pt>Como funciona</span><span data-en>How it works</span></h2>
+    <div class="steps">
+      <div class="step"><b>1 ✏️</b><span data-pt>A criança desenha com o dedo: um sol, uma casa, um cachorro — o que ela imaginar.</span><span data-en>Your child draws with a finger: a sun, a house, a dog — whatever they imagine.</span></div>
+      <div class="step"><b>2 ✨</b><span data-pt>Ela toca em Transformar. A mágica respeita o desenho: o sol continua no mesmo lugar, com a mesma cor.</span><span data-en>They tap Transform. The magic respects the drawing: the sun stays in the same place, in the same colour.</span></div>
+      <div class="step"><b>3 🖼️</b><span data-pt>Volta uma cena realista, com título e uma frase carinhosa — e o desenho original aparece no cantinho.</span><span data-en>Back comes a realistic scene, with a title and a kind phrase — and the original drawing appears in the corner.</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2><span data-pt>Antes e depois</span><span data-en>Before and after</span></h2>
+    <div class="before-after">
+      <figure>🎨<figcaption><span data-pt>Antes: o rabisco da criança</span><span data-en>Before: your child's scribble</span></figcaption></figure>
+      <figure>🌅<figcaption><span data-pt>Depois: a cena transformada</span><span data-en>After: the transformed scene</span></figcaption></figure>
+    </div>
+    <p><small><span data-pt>Os exemplos reais da galeria só aparecem aqui com a permissão da família.</span><span data-en>Real gallery examples only appear here with the family's permission.</span></small></p>
+  </section>
+
+  <section class="card">
+    <h2><span data-pt>Preços</span><span data-en>Pricing</span></h2>
+    <table>
+      <tr><th><span data-pt>Grátis</span><span data-en>Free</span></th><td><span data-pt>5 transformações no total, qualidade completa, baixar e compartilhar incluídos.</span><span data-en>5 transformations in total, full quality, download and share included.</span></td><td class="price">$0</td></tr>
+      <tr><th><span data-pt>Família — mensal</span><span data-en>Family — monthly</span></th><td><span data-pt>Transformações para as crianças da família, galeria na nuvem, todos os idiomas. Limite de uso justo: 300/mês.</span><span data-en>Transforms for your family's children, cloud gallery, all languages. Fair-use cap: 300/month.</span></td><td class="price">A$7.99<span data-pt>/mês</span><span data-en>/mo</span></td></tr>
+      <tr><th><span data-pt>Família — anual</span><span data-en>Family — yearly</span></th><td><span data-pt>O mesmo que o mensal, cerca de 43% mais barato.</span><span data-en>Same as monthly, about 43% cheaper.</span></td><td class="price">A$54.99<span data-pt>/ano</span><span data-en>/yr</span></td></tr>
+      <tr><th><span data-pt>Pacote Mágico</span><span data-en>Magic Pack</span></th><td><span data-pt>30 transformações, sem assinatura. Para avós, presentes e quem não quer assinar nada.</span><span data-en>30 transforms, no subscription. For grandparents, gifts, and parents who don't want a subscription.</span></td><td class="price">A$4.99</td></tr>
+    </table>
+    <p><span class="badge"><span data-pt>Sem anúncios</span><span data-en>No ads</span></span> <span class="badge"><span data-pt>Sem venda de dados</span><span data-en>No data selling</span></span></p>
+  </section>
+
+  <section class="card">
+    <h2><span data-pt>Segurança e privacidade</span><span data-en>Safety and privacy</span></h2>
+    <ul>
+      <li><span data-pt><b>Só os pais têm conta.</b> Não pedimos nome, foto ou aniversário de nenhuma criança.</span><span data-en><b>Parents only have accounts.</b> We never ask for a child's name, photo or birthday.</span></li>
+      <li><span data-pt><b>Sem anúncios e sem rastreamento</b> de terceiros sobre as crianças.</span><span data-en><b>No ads and no third-party tracking</b> of children.</span></li>
+      <li><span data-pt><b>Cada imagem passa por filtros de segurança</b> antes de aparecer na tela.</span><span data-en><b>Every image passes safety filters</b> before it appears on screen.</span></li>
+      <li><span data-pt><b>Você apaga quando quiser:</b> a galeria e os desenhos podem ser apagados de verdade, sem precisar mandar e-mail.</span><span data-en><b>You can delete whenever you like:</b> the gallery and drawings can really be deleted, without emailing anyone.</span></li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2><span data-pt>Perguntas frequentes</span><span data-en>Frequently asked questions</span></h2>
+    <p><b><span data-pt>Meu filho precisa saber ler?</span><span data-en>Does my child need to be able to read?</span></b><br>
+    <span data-pt>Não. Os botões são ícones e os textos são curtos. Muitas crianças de 4 anos usam sozinhas.</span>
+    <span data-en>No. The buttons are icons and the texts are short. Many 4-year-olds use it on their own.</span></p>
+    <p><b><span data-pt>Em quais idiomas funciona?</span><span data-en>Which languages does it work in?</span></b><br>
+    <span data-pt>Português, inglês e espanhol — o título e a frase vêm no idioma da criança.</span>
+    <span data-en>Portuguese, English and Spanish — the title and phrase come in your child's language.</span></p>
+    <p><b><span data-pt>O desenho original some?</span><span data-en>Does the original drawing disappear?</span></b><br>
+    <span data-pt>Não — ele aparece no cantinho da imagem transformada, e também no arquivo que você baixa ou compartilha.</span>
+    <span data-en>No — it appears in the corner of the transformed image, and in the file you download or share.</span></p>
+    <p><b><span data-pt>Posso cancelar quando quiser?</span><span data-en>Can I cancel whenever I like?</span></b><br>
+    <span data-pt>Sim. Cancele na sua conta; a assinatura vale até o fim do período pago. Veja os detalhes em Suporte e reembolsos.</span>
+    <span data-en>Yes. Cancel in your account; the subscription runs until the end of the paid period. See Support and refunds for details.</span></p>
+  </section>
+</main>
+<footer>
+  <span data-pt>Rabisco Mágico — feito com carinho para crianças de 4 a 10 anos.</span>
+  <span data-en>Rabisco Mágico — made with care for children aged 4–10.</span>
+</footer>
+<script>
+function setLang(l) {
+  document.documentElement.lang = l === "pt" ? "pt-BR" : "en";
+  document.getElementById("btn-pt").setAttribute("aria-pressed", l === "pt");
+  document.getElementById("btn-en").setAttribute("aria-pressed", l === "en");
+  try { localStorage.setItem("rabisco-lang", l); } catch (e) {}
+}
+(function () {
+  var saved = null;
+  try { saved = localStorage.getItem("rabisco-lang"); } catch (e) {}
+  if (saved === "en") setLang("en");
+  else if ((navigator.language || "").toLowerCase().indexOf("en") === 0 && !saved) setLang("en");
+})();
+</script>
+</body>
+</html>

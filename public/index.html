@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<a class="skip-link" href="#btn-transform">Ir para Transformar</a>
 <div class="phone" id="phone">
   <div class="app" id="app">
 
@@ -28,21 +29,22 @@
           <button id="btn-undo" class="icon-btn" aria-label="Desfazer" title="Desfazer">↩️</button>
           <button id="btn-clear" class="icon-btn" aria-label="Limpar tudo" title="Limpar tudo">🗑️</button>
           <button id="btn-gallery" class="icon-btn" aria-label="Galeria" title="Galeria">🖼️</button>
+          <button id="btn-parents" class="icon-btn" aria-label="Área dos pais" title="Área dos pais">🔒</button>
         </div>
       </header>
 
       <div class="board-wrap">
-        <canvas id="board" aria-label="Quadro de desenho"></canvas>
+        <canvas id="board" role="img" aria-label="Quadro de desenho. Desenhe com o dedo; o desenho aparece aqui." aria-describedby="hint"></canvas>
         <p class="hint" id="hint" data-i18n="hint">Desenhe com o dedo! Depois toque em Transformar</p>
       </div>
 
       <div class="tray">
         <div class="palette" id="palette" role="group" aria-label="Cores"></div>
         <div class="brushes" id="brushes" role="group" aria-label="Pincéis">
-          <button data-size="6" aria-label="Pincel fino">●</button>
-          <button data-size="14" class="active" aria-label="Pincel médio">●</button>
-          <button data-size="28" aria-label="Pincel grosso">●</button>
-          <button id="btn-eraser" aria-label="Borracha">🧽</button>
+          <button data-size="6" aria-label="Pincel fino" aria-pressed="false">●</button>
+          <button data-size="14" class="active" aria-label="Pincel médio" aria-pressed="true">●</button>
+          <button data-size="28" aria-label="Pincel grosso" aria-pressed="false">●</button>
+          <button id="btn-eraser" aria-label="Borracha" aria-pressed="false">🧽</button>
         </div>
         <button id="btn-transform" class="transform-btn" data-i18n="transform">✨ Transformar</button>
       </div>
@@ -50,7 +52,7 @@
     </section>
 
     <!-- Loading screen -->
-    <section class="screen screen-loading" id="screen-loading" hidden>
+    <section class="screen screen-loading" id="screen-loading" hidden role="status" aria-live="polite">
       <div class="wand" aria-hidden="true">🪄</div>
       <p data-i18n="loading">Fazendo mágica… Estou descobrindo o que você desenhou</p>
     </section>
@@ -60,8 +62,8 @@
       <h2 id="result-title"></h2>
       <p id="result-phrase"></p>
       <div class="result-image-wrap">
-        <img id="result-image" alt="Desenho transformado">
-        <img id="result-thumb" class="thumb" alt="Desenho original">
+        <img id="result-image" alt="Desenho transformado — a imagem aparece aqui depois da mágica">
+        <img id="result-thumb" class="thumb" alt="Desenho original, em miniatura">
       </div>
       <div class="result-actions">
         <button id="btn-download" class="btn btn-primary" data-i18n="download">Baixar</button>
@@ -71,7 +73,7 @@
         <button id="btn-again" class="btn" data-i18n="drawAnother">Desenhar outro</button>
         <button id="btn-continue" class="btn" data-i18n="continue">Continuar</button>
       </div>
-      <p class="error" id="result-error" hidden></p>
+      <p class="error" id="result-error" role="alert" hidden></p>
     </section>
 
     <!-- Gallery screen -->
@@ -80,8 +82,58 @@
         <h1 data-i18n="galleryTitle">Galeria</h1>
         <button id="btn-gallery-back" class="icon-btn" aria-label="Voltar">←</button>
       </header>
+      <div class="gallery-tools">
+        <input id="gallery-search" class="field gallery-search" type="search" placeholder="Buscar pelo título…" aria-label="Buscar na galeria">
+        <button id="btn-gallery-favourites" class="btn gallery-fav-filter" aria-pressed="false">⭐ Favoritas</button>
+      </div>
       <div class="gallery-grid" id="gallery-grid"></div>
       <p class="gallery-empty" id="gallery-empty" data-i18n="galleryEmpty">Suas obras transformadas aparecem aqui.</p>
+    </section>
+
+    <!-- Parental gate: simple adult check (maths question) before any
+         parent-only area: signup, payment, settings, gallery deletion. -->
+    <section class="screen screen-gate" id="screen-gate" hidden>
+      <header class="topbar">
+        <h1 data-i18n="parentsTitle">Área dos pais</h1>
+        <button id="btn-gate-back" class="icon-btn" aria-label="Voltar">←</button>
+      </header>
+      <div class="gate-body">
+        <p data-i18n="gateIntro">Só para adultos: responda para continuar.</p>
+        <p class="gate-question" id="gate-question"></p>
+        <div class="gate-answers" id="gate-answers" role="group" aria-label="Respostas"></div>
+        <p class="error" id="gate-error" role="alert" hidden></p>
+      </div>
+    </section>
+
+    <!-- Parent panel: sign-in (magic link stub), plan, payment, delete gallery -->
+    <section class="screen screen-parents" id="screen-parents" hidden>
+      <header class="topbar">
+        <h1 data-i18n="parentsTitle">Área dos pais</h1>
+        <button id="btn-parents-back" class="icon-btn" aria-label="Voltar">←</button>
+      </header>
+      <div class="parent-panel">
+        <div id="parent-signed-out">
+          <p data-i18n="parentIntro">Entre com seu e-mail para gerenciar o plano e a galeria.</p>
+          <label class="field-label" for="parent-email" data-i18n="parentEmail">E-mail</label>
+          <input id="parent-email" class="field" type="email" inputmode="email" autocomplete="email" placeholder="voce@exemplo.com">
+          <button id="btn-send-link" class="btn btn-primary" data-i18n="sendLink">Enviar link de acesso</button>
+          <p class="parent-note" id="link-sent" hidden data-i18n="linkSent">Enviamos um link para o seu e-mail. Toque nele para entrar.</p>
+          <label class="field-label" for="parent-token" data-i18n="tokenLabel">Código do link (enquanto o e-mail não está ligado)</label>
+          <input id="parent-token" class="field" type="text" autocomplete="one-time-code" placeholder="cole o código aqui">
+          <button id="btn-verify-token" class="btn" data-i18n="verifyToken">Entrar com o código</button>
+          <p class="error" id="parent-error" role="alert" hidden></p>
+        </div>
+        <div id="parent-signed-in" hidden>
+          <p class="parent-status" id="parent-status"></p>
+          <button id="btn-buy-family-monthly" class="btn btn-primary" data-i18n="buyFamilyMonthly">Família — A$7,99/mês</button>
+          <button id="btn-buy-family-yearly" class="btn" data-i18n="buyFamilyYearly">Família — A$54,99/ano</button>
+          <button id="btn-buy-pack" class="btn" data-i18n="buyPack">Pacote Mágico — A$4,99 (30 magias)</button>
+          <button id="btn-install" class="btn" hidden data-i18n="installApp">Instalar o app no celular</button>
+          <button id="btn-delete-gallery" class="btn btn-danger" data-i18n="deleteGallery">Apagar toda a galeria</button>
+          <p class="parent-note" id="delete-note" hidden></p>
+          <button id="btn-sign-out" class="btn" data-i18n="signOut">Sair</button>
+        </div>
+      </div>
     </section>
 
   </div>

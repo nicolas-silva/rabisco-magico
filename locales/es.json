@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "language": "es",
+    "note": "Traducido del pt-BR. TODAS las frases dirigidas a niños deben ser revisadas por un hablante nativo de español antes del lanzamiento — una frase técnicamente correcta puede sonar fría para un niño de 5 años. Ver needsNativeCheck."
+  },
+  "actions": {
+    "continue": "Seguir dibujando",
+    "download": "Descargar",
+    "drawAnother": "Dibujar otro",
+    "share": "Compartir",
+    "transform": "✨ Transformar"
+  },
+  "app": {
+    "hint": "¡Dibuja con el dedo! Después toca Transformar",
+    "languageLabel": "Idioma",
+    "madeForMobile": "Hecho para el móvil",
+    "title": "Rabisco Mágico"
+  },
+  "errors": {
+    "busy": "¡Ya estoy haciendo magia! Espera un momento.",
+    "denied": "La magia necesita permiso para continuar.",
+    "empty": "¡Dibuja algo primero!",
+    "failed": "¡Ups, la magia falló! Inténtalo de nuevo.",
+    "notConfigured": "La magia aún no está encendida. Pídele a un adulto que revise.",
+    "quota": "¡Tus 5 magias gratis se acabaron! Pídele a un adulto que continúe.",
+    "rateLimit": "¡Demasiada magia! Espera un poquito e inténtalo de nuevo."
+  },
+  "fallback": {
+    "phrase": "¡Mira en qué se convirtió tu dibujo!",
+    "title": "Mi dibujo mágico"
+  },
+  "gallery": {
+    "empty": "Tus obras transformadas aparecerán aquí.",
+    "title": "Galería",
+    "search": "Buscar por título…",
+    "favourites": "⭐ Favoritas",
+    "favouritesOnly": "⭐ Solo favoritas"
+  },
+  "landing": {
+    "cta": "✨ Empezar a dibujar",
+    "headline": "Las 5 primeras transformaciones son gratis",
+    "noAds": "Sin anuncios",
+    "noDataSelling": "Sin venta de datos",
+    "subheadline": "El dibujo de tu hijo se convierte en una imagen real."
+  },
+  "loading": "Haciendo magia… Estoy descubriendo lo que dibujaste",
+  "needsNativeCheck": [
+    "app.hint",
+    "loading",
+    "errors.empty",
+    "errors.rateLimit",
+    "errors.quota",
+    "errors.busy",
+    "errors.notConfigured",
+    "fallback.phrase",
+    "landing.headline",
+    "landing.subheadline"
+  ],
+  "toolbar": {
+    "back": "Volver",
+    "board": "Pizarra de dibujo",
+    "brushFine": "Pincel fino",
+    "brushMedium": "Pincel mediano",
+    "brushThick": "Pincel grueso",
+    "clearAll": "Borrar todo",
+    "clearWarn": "Toca de nuevo para borrar todo",
+    "colours": "Colores",
+    "eraser": "Borrador",
+    "gallery": "Galería",
+    "undo": "Deshacer"
+  }
+}
