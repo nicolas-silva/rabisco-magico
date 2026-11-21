@@ -781,37 +781,37 @@ if (require.main === module) {
   });
 }
 
-module.exports = {
-  app,
-  isBlankPng,
-  interpretDrawing,
-  generateWithFal,
-  FREE_TRANSFORMS,
-  accounts,
-  storage,
-  metrics,
-  blocklist,
-  outputSafety,
-  audit,
-  shareCard,
-  referrals,
-  logger,
-  errorMonitor,
-  // Test-only: replace the vision step (pass null to clear).
-  _testSetVisionOverride(fn) {
-    visionOverride = typeof fn === "function" ? fn : null;
-  },
-  // Test-only: reset in-memory quota / in-flight / accounts / metrics /
-  // audit log / blocklist extras / vision override.
-  _testReset() {
-    usage.clear();
-    inFlight.clear();
-    visionOverride = null;
-    accounts._testReset();
-    referrals._testReset();
-    metrics._testReset();
-    audit._testReset();
-    blocklist._testReset();
-    errorMonitor._testReset();
-  },
+// Export the Express app itself as the module value (Vercel's Express
+// handling requires the default export to be a function/server), with the
+// helpers tests use attached as properties so `const { app } =
+// require('./server.js')` keeps working.
+module.exports = app;
+module.exports.app = app;
+module.exports.isBlankPng = isBlankPng;
+module.exports.interpretDrawing = interpretDrawing;
+module.exports.generateWithFal = generateWithFal;
+module.exports.FREE_TRANSFORMS = FREE_TRANSFORMS;
+module.exports.accounts = accounts;
+module.exports.storage = storage;
+module.exports.metrics = metrics;
+module.exports.blocklist = blocklist;
+module.exports.outputSafety = outputSafety;
+module.exports.audit = audit;
+module.exports.shareCard = shareCard;
+module.exports.referrals = referrals;
+module.exports.logger = logger;
+module.exports.errorMonitor = errorMonitor;
+module.exports._testSetVisionOverride = function (fn) {
+  visionOverride = typeof fn === "function" ? fn : null;
+};
+module.exports._testReset = function () {
+  usage.clear();
+  inFlight.clear();
+  visionOverride = null;
+  accounts._testReset();
+  referrals._testReset();
+  metrics._testReset();
+  audit._testReset();
+  blocklist._testReset();
+  errorMonitor._testReset();
 };
