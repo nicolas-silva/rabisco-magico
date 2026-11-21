@@ -1,1 +1,1 @@
-{"$schema":"https://openapi.vercel.sh/vercel.json","rewrites":[{"destination":"/api/index.js","source":"/(.*)"}]}
+{"$schema":"https://openapi.vercel.sh/vercel.json","headers":[{"headers":[{"key":"Cache-Control","value":"no-cache, no-store, must-revalidate"}],"source":"/sw.js"}],"rewrites":[{"destination":"/api/index.js","source":"/(.*)"}]}

@@ -129,6 +129,16 @@ const I18N = {
 };
 
 const $ = (id) => document.getElementById(id);
+// Attach a listener only if the element exists. The app shell is cached
+// by a service worker, so this script can briefly run against an older
+// HTML shell; one missing element must never throw and kill the whole
+// script — a dead script means a dead language picker, dead buttons and
+// a completely static page.
+function on(id, event, fn) {
+  const el = $(id);
+  if (el) el.addEventListener(event, fn);
+  return el;
+}
 const canvas = $("board");
 const ctx = canvas.getContext("2d");
 
@@ -150,10 +160,12 @@ function applyLanguage() {
     const key = el.getAttribute("data-i18n");
     if (I18N[lang][key]) el.textContent = I18N[lang][key];
   });
-  $("lang-picker").value = lang;
+  const picker = $("lang-picker");
+  if (picker) picker.value = lang;
   const welcomePicker = $("lang-picker-welcome");
   if (welcomePicker) welcomePicker.value = lang;
-  $("gallery-search").placeholder = I18N[lang].gallerySearch;
+  const search = $("gallery-search");
+  if (search) search.placeholder = I18N[lang].gallerySearch;
   updateFavouritesFilterLabel();
   renderQuota();
 }
@@ -340,8 +352,13 @@ $("btn-clear").addEventListener("click", () => {
 // Screens
 // ---------------------------------------------------------------------------
 function show(id) {
+  // A shell older than this script has no welcome/upgrade screens; fall
+  // back to the drawing screen instead of throwing on a missing element.
+  let target = $(id);
+  if (!target) target = $("screen-draw");
   ["screen-welcome", "screen-draw", "screen-loading", "screen-result", "screen-gallery", "screen-gate", "screen-parents", "screen-upgrade"].forEach((s) => {
-    $(s).hidden = s !== id;
+    const el = $(s);
+    if (el) el.hidden = el !== target;
   });
 }
 
@@ -544,6 +561,7 @@ $("btn-continue").addEventListener("click", () => show("screen-draw"));
 let galleryFavouritesOnly = false;
 function updateFavouritesFilterLabel() {
   const btn = $("btn-gallery-favourites");
+  if (!btn) return;
   btn.textContent = galleryFavouritesOnly ? I18N[lang].galleryFavouritesOnly : I18N[lang].galleryFavourites;
   btn.classList.toggle("active", galleryFavouritesOnly);
   btn.setAttribute("aria-pressed", String(galleryFavouritesOnly));
@@ -687,12 +705,12 @@ $("btn-parents-back").addEventListener("click", backFromParentArea);
 
 // First screen for a parent who has not signed in yet: the drawing
 // board is locked until a parent account exists.
-$("btn-welcome-parents").addEventListener("click", () => { newGateQuestion(); show("screen-gate"); });
+on("btn-welcome-parents", "click", () => { newGateQuestion(); show("screen-gate"); });
 
 // Upgrade gate: the 5 free transforms are used up. Plans live in the
 // parent panel (Stripe test-mode checkout); the landing page lists them too.
-$("btn-upgrade-plans").addEventListener("click", () => { renderParentPanel(); show("screen-parents"); });
-$("btn-upgrade-back").addEventListener("click", () => show("screen-draw"));
+on("btn-upgrade-plans", "click", () => { renderParentPanel(); show("screen-parents"); });
+on("btn-upgrade-back", "click", () => show("screen-draw"));
 
 async function renderParentPanel() {
   $("parent-error").hidden = true;
@@ -867,14 +885,16 @@ if ("serviceWorker" in navigator) {
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  $("btn-install").hidden = false;
+  const installBtn = $("btn-install");
+  if (installBtn) installBtn.hidden = false;
 });
-$("btn-install").addEventListener("click", async () => {
+on("btn-install", "click", async () => {
   if (!deferredInstallPrompt) return;
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice.catch(() => {});
   deferredInstallPrompt = null;
-  $("btn-install").hidden = true;
+  const installBtn = $("btn-install");
+  if (installBtn) installBtn.hidden = true;
 });
 
 // ---------------------------------------------------------------------------
@@ -886,7 +906,7 @@ function setLanguage(value) {
   localStorage.setItem("rabisco-lang", lang);
   applyLanguage();
 }
-$("lang-picker").addEventListener("change", (e) => setLanguage(e.target.value));
+on("lang-picker", "change", (e) => setLanguage(e.target.value));
 const welcomePicker = $("lang-picker-welcome");
 if (welcomePicker) welcomePicker.addEventListener("change", (e) => setLanguage(e.target.value));
 lang = detectLanguage();
