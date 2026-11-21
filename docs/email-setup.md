@@ -95,3 +95,5 @@ machine but does not work on Vercel.
 - Resend's free tier is enough for a beta (a few hundred parents).
   If signups grow past it, Resend's paid plans start at $20/month
   for 50,000 emails — far above what a beta needs.
+
+<!-- Production deploy note: EMAIL_FROM now onboarding@resend.dev (test sender) until a domain is verified. -->
