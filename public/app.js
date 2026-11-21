@@ -43,6 +43,12 @@ const I18N = {
     deleteGalleryFailed: "Não consegui apagar a galeria. Tente de novo.",
     checkoutFailed: "Não consegui abrir o pagamento. Tente de novo.",
     installApp: "Instalar o app no celular", signOut: "Sair",
+    welcomeIntro: "Os pais criam uma conta grátis primeiro — depois a criança desenha.",
+    welcomeFree: "5 transformações grátis por conta. Sem cartão.",
+    welcomeStart: "Entrar como pai/mãe",
+    upgradeTitle: "Suas 5 magias grátis acabaram",
+    upgradeIntro: "Escolha um plano para continuar a mágica — só os pais decidem.",
+    upgradePlans: "Ver planos e preços", upgradeBack: "Voltar ao desenho",
   },
   en: {
     title: "Rabisco Mágico", hint: "Draw with your finger! Then tap Transform",
@@ -75,6 +81,12 @@ const I18N = {
     deleteGalleryFailed: "Could not delete the gallery. Try again.",
     checkoutFailed: "Could not open checkout. Try again.",
     installApp: "Install the app on your phone", signOut: "Sign out",
+    welcomeIntro: "Parents create a free account first — then your child draws.",
+    welcomeFree: "5 free transforms per account. No card needed.",
+    welcomeStart: "Parent sign-in",
+    upgradeTitle: "Your 5 free magic turns are used up",
+    upgradeIntro: "Choose a plan to keep the magic going — parents decide.",
+    upgradePlans: "See plans & prices", upgradeBack: "Back to drawing",
   },
   es: {
     title: "Rabisco Mágico", hint: "¡Dibuja con el dedo! Después toca Transformar",
@@ -107,6 +119,12 @@ const I18N = {
     deleteGalleryFailed: "No pude borrar la galería. Inténtalo de nuevo.",
     checkoutFailed: "No pude abrir el pago. Inténtalo de nuevo.",
     installApp: "Instalar la app en el teléfono", signOut: "Cerrar sesión",
+    welcomeIntro: "Los padres crean una cuenta gratis primero — después el niño dibuja.",
+    welcomeFree: "5 transformaciones gratis por cuenta. Sin tarjeta.",
+    welcomeStart: "Entrar como padre/madre",
+    upgradeTitle: "Tus 5 magias gratis se acabaron",
+    upgradeIntro: "Elige un plan para seguir con la magia — lo deciden los padres.",
+    upgradePlans: "Ver planes y precios", upgradeBack: "Volver al dibujo",
   },
 };
 
@@ -133,6 +151,8 @@ function applyLanguage() {
     if (I18N[lang][key]) el.textContent = I18N[lang][key];
   });
   $("lang-picker").value = lang;
+  const welcomePicker = $("lang-picker-welcome");
+  if (welcomePicker) welcomePicker.value = lang;
   $("gallery-search").placeholder = I18N[lang].gallerySearch;
   updateFavouritesFilterLabel();
   renderQuota();
@@ -320,7 +340,7 @@ $("btn-clear").addEventListener("click", () => {
 // Screens
 // ---------------------------------------------------------------------------
 function show(id) {
-  ["screen-draw", "screen-loading", "screen-result", "screen-gallery", "screen-gate", "screen-parents"].forEach((s) => {
+  ["screen-welcome", "screen-draw", "screen-loading", "screen-result", "screen-gallery", "screen-gate", "screen-parents", "screen-upgrade"].forEach((s) => {
     $(s).hidden = s !== id;
   });
 }
@@ -364,6 +384,17 @@ $("btn-transform").addEventListener("click", async () => {
       body: JSON.stringify({ image: thumb, language: lang, strokeCount: strokes.length }),
     });
     const data = await res.json();
+    if (res.status === 402) {
+      // Free transforms used up — parent-facing upgrade gate.
+      show("screen-upgrade");
+      return;
+    }
+    if (res.status === 401) {
+      // Session expired or missing — back to the parent sign-in screen.
+      setParentSession("");
+      show("screen-welcome");
+      return;
+    }
     if (!data.ok) throw new Error(data.message || I18N[lang].failed);
     lastWork = { titulo: data.titulo, frase: data.frase, imageUrl: data.imageUrl, thumb, workId: data.workId || null };
     $("result-title").textContent = data.titulo;
@@ -646,8 +677,22 @@ function newGateQuestion() {
 }
 
 $("btn-parents").addEventListener("click", () => { newGateQuestion(); show("screen-gate"); });
-$("btn-gate-back").addEventListener("click", () => show("screen-draw"));
-$("btn-parents-back").addEventListener("click", () => show("screen-draw"));
+// Back from a parent-only area: the drawing screen when signed in,
+// the parent sign-in (welcome) screen when not.
+function backFromParentArea() {
+  show(parentSession() ? "screen-draw" : "screen-welcome");
+}
+$("btn-gate-back").addEventListener("click", backFromParentArea);
+$("btn-parents-back").addEventListener("click", backFromParentArea);
+
+// First screen for a parent who has not signed in yet: the drawing
+// board is locked until a parent account exists.
+$("btn-welcome-parents").addEventListener("click", () => { newGateQuestion(); show("screen-gate"); });
+
+// Upgrade gate: the 5 free transforms are used up. Plans live in the
+// parent panel (Stripe test-mode checkout); the landing page lists them too.
+$("btn-upgrade-plans").addEventListener("click", () => { renderParentPanel(); show("screen-parents"); });
+$("btn-upgrade-back").addEventListener("click", () => show("screen-draw"));
 
 async function renderParentPanel() {
   $("parent-error").hidden = true;
@@ -722,6 +767,9 @@ async function verifyToken(token) {
   if (!data.ok) throw new Error("invalid token");
   setParentSession(data.sessionToken);
   renderParentPanel();
+  // Signed in: the drawing board unlocks.
+  show("screen-draw");
+  refreshQuota();
   return true;
 }
 
@@ -739,22 +787,21 @@ $("btn-verify-token").addEventListener("click", async () => {
 // Magic-link sign-in: a parent who taps the emailed link lands here with
 // ?token=... — verify it, store the session, strip the token from the
 // URL (it is a credential and must not linger in history or bookmarks),
-// and open the parent panel. The paste-the-code path above still works.
+// and unlock the drawing board. The paste-the-code path above still works.
 async function handleMagicLinkToken() {
   let token = "";
   try { token = new URLSearchParams(window.location.search).get("token") || ""; }
-  catch (_e) { return; }
-  if (!token) return;
+  catch (_e) { return false; }
+  if (!token) return false;
   try { window.history.replaceState({}, "", window.location.pathname); } catch (_e) { /* ignore */ }
   try {
     await verifyToken(token);
-    show("screen-parents");
   } catch (_e) {
-    renderParentPanel();
-    show("screen-parents");
-    $("parent-error").textContent = I18N[lang].invalidToken;
-    $("parent-error").hidden = false;
+    show("screen-welcome");
+    $("welcome-error").textContent = I18N[lang].invalidToken;
+    $("welcome-error").hidden = false;
   }
+  return true;
 }
 
 async function startCheckout(product, billing) {
@@ -806,6 +853,8 @@ $("btn-delete-gallery").addEventListener("click", async () => {
 $("btn-sign-out").addEventListener("click", () => {
   setParentSession("");
   renderParentPanel();
+  // Signed out: the drawing board locks again.
+  show("screen-welcome");
 });
 
 // ---------------------------------------------------------------------------
@@ -829,15 +878,38 @@ $("btn-install").addEventListener("click", async () => {
 });
 
 // ---------------------------------------------------------------------------
-// Init
+// Init — the drawing board is locked until a parent is signed in.
 // ---------------------------------------------------------------------------
-$("lang-picker").addEventListener("change", (e) => {
-  lang = e.target.value;
+function setLanguage(value) {
+  if (!I18N[value]) return;
+  lang = value;
   localStorage.setItem("rabisco-lang", lang);
   applyLanguage();
-});
+}
+$("lang-picker").addEventListener("change", (e) => setLanguage(e.target.value));
+const welcomePicker = $("lang-picker-welcome");
+if (welcomePicker) welcomePicker.addEventListener("change", (e) => setLanguage(e.target.value));
 lang = detectLanguage();
 applyLanguage();
-refreshQuota();
-handleMagicLinkToken();
+
+// Entry gate: a magic-link token in the URL wins; otherwise a stored
+// parent session is validated (an expired one drops back to the
+// welcome screen); otherwise the parent sign-in screen is shown first.
+async function enterApp() {
+  if (await handleMagicLinkToken()) return;
+  if (parentSession()) {
+    try {
+      const res = await fetch("/api/parent/me", { headers: { "x-parent-session": parentSession() } });
+      const data = await res.json();
+      if (data.ok) {
+        show("screen-draw");
+        refreshQuota();
+        return;
+      }
+    } catch (_e) { /* fall through to the welcome screen */ }
+    setParentSession("");
+  }
+  show("screen-welcome");
+}
+enterApp();
 resizeCanvas();

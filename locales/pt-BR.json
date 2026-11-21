@@ -16,7 +16,14 @@
     "languageLabel": "Idioma",
     "madeForMobile": "Feito para celular",
     "parents": "Pais",
-    "title": "Rabisco Mágico"
+    "title": "Rabisco Mágico",
+    "upgradeBack": "Voltar ao desenho",
+    "upgradeIntro": "Escolha um plano para continuar a mágica — só os pais decidem.",
+    "upgradePlans": "Ver planos e preços",
+    "upgradeTitle": "Suas 5 magias grátis acabaram",
+    "welcomeFree": "5 transformações grátis por conta. Sem cartão.",
+    "welcomeIntro": "Os pais criam uma conta grátis primeiro — depois a criança desenha.",
+    "welcomeStart": "Entrar como pai/mãe"
   },
   "errors": {
     "busy": "Já estou fazendo uma mágica! Espere um pouquinho.",

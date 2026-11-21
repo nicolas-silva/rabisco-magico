@@ -343,6 +343,7 @@ beforeEach(() => {
 
 test("integration: blocklisted title fails friendly, before any fal call, no quota charged", async () => {
   const srv = require("../server.js");
+  const session = await signedInParent("bloqueado@example.com");
   srv._testSetVisionOverride(() => ({
     titulo: "Meu desenho",
     frase: "que porra é essa",
@@ -350,7 +351,7 @@ test("integration: blocklisted title fails friendly, before any fal call, no quo
   }));
   const r = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "blocked-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(r.status, 502);
   assert.equal(r.data.error, "failed");
@@ -361,7 +362,7 @@ test("integration: blocklisted title fails friendly, before any fal call, no quo
   srv._testSetVisionOverride(cleanVision);
   const ok = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "blocked-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(ok.status, 200);
   assert.equal(ok.data.remaining, 4);
@@ -379,9 +380,10 @@ test("integration: blocklisted title fails friendly, before any fal call, no quo
 
 test("integration: output-safety fail blocks showing/saving, charges no quota (fal already ran)", async () => {
   process.env.OUTPUT_SAFETY_STUB_RESULT = "fail";
+  const session = await signedInParent("seguranca@example.com");
   const r = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "safety-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(r.status, 502);
   assert.equal(r.data.error, "failed");
@@ -391,7 +393,7 @@ test("integration: output-safety fail blocks showing/saving, charges no quota (f
   delete process.env.OUTPUT_SAFETY_STUB_RESULT;
   const ok = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "safety-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(ok.status, 200);
   assert.equal(ok.data.remaining, 4, "blocked output must not consume quota");
@@ -403,18 +405,20 @@ test("integration: output-safety fail blocks showing/saving, charges no quota (f
 
 test("integration: OUTPUT_SAFETY_CHECK=off lets a transform through (debug only)", async () => {
   process.env.OUTPUT_SAFETY_CHECK = "off";
+  const session = await signedInParent("sem-checagem@example.com");
   const r = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "off-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(r.status, 200);
   assert.equal(r.data.imageUrl, "https://example.invalid/generated.png");
 });
 
 test("integration: successful transform is audited with a hash, no raw id, and a work id", async () => {
+  const session = await signedInParent("auditado@example.com");
   const r = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "audited-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(r.status, 200);
   assert.ok(r.data.workId);
@@ -426,7 +430,7 @@ test("integration: successful transform is audited with a hash, no raw id, and a
   assert.equal(e.cost_usd, 0.045);
   assert.equal(e.work_id, r.data.workId);
   assert.match(e.account_id_hash, /^[0-9a-f]{64}$/);
-  assert.ok(!JSON.stringify(e).includes("audited-account"));
+  assert.ok(!JSON.stringify(e).includes("auditado@example.com"));
 });
 
 test("integration: gallery delete is audited, and saved works carry retention records", async () => {
@@ -449,14 +453,14 @@ test("integration: gallery delete is audited, and saved works carry retention re
   assert.ok(wiped, "gallery wipe must be audited");
   assert.equal(wiped.outcome, "success");
 
-  // Anonymous transform: auto-purge retention on the stored work.
-  const anon = await req("POST", "/api/transform", {
+  // No parent session: no transform, no AI call, nothing stored.
+  const callsBefore = falCalls;
+  const denied = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "anon-retention" },
   });
-  assert.equal(anon.status, 200);
-  const stored = await require("../server.js").storage.listWorks("anon-retention");
-  assert.equal(stored.length, 1);
-  assert.equal(stored[0].retention.policy, "auto_purge");
-  assert.ok(stored[0].retention.deleteAfter > stored[0].retention.createdAt);
+  assert.equal(denied.status, 401);
+  assert.equal(denied.data.error, "parent_required");
+  assert.equal(falCalls, callsBefore, "rejected transform must not call fal");
+  const stillEmpty = await req("GET", "/api/gallery", { headers: { "x-parent-session": session } });
+  assert.equal(stillEmpty.data.works.length, 0, "nothing was stored for a rejected transform");
 });

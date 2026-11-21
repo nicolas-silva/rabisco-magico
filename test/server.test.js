@@ -83,16 +83,36 @@ const inkDrawing = () => makePng(512, 512, (x, y) => (x === 10 && y === 10 ? [25
 let server;
 let baseUrl;
 
-async function postTransform(body, account) {
+async function postTransform(body, session) {
   const res = await fetch(baseUrl + "/api/transform", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(account ? { "x-account-id": account } : {}),
+      ...(session ? { "x-parent-session": session } : {}),
     },
     body: JSON.stringify(body),
   });
   return { status: res.status, data: await res.json() };
+}
+
+// A parent account is required to transform. Sign up + verify through
+// the real endpoints; the test-only helper reads the magic token.
+async function signedInParent(email) {
+  const signup = await fetch(baseUrl + "/api/parent/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  assert.equal(signup.status, 200);
+  const token = require("../server.js").accounts._testGetMagicToken(email);
+  assert.ok(token, "no magic token issued");
+  const verify = await fetch(baseUrl + "/api/parent/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  assert.equal(verify.status, 200);
+  return (await verify.json()).sessionToken;
 }
 
 before(async () => {
@@ -139,7 +159,8 @@ beforeEach(() => {
 });
 
 test("happy path: a real drawing transforms and counts against quota", async () => {
-  const { status, data } = await postTransform({ image: inkDrawing(), language: "pt" }, "happy");
+  const session = await signedInParent("feliz@example.com");
+  const { status, data } = await postTransform({ image: inkDrawing(), language: "pt" }, session);
   assert.equal(status, 200);
   assert.equal(data.ok, true);
   assert.equal(data.imageUrl, "https://example.invalid/generated.png");
@@ -152,8 +173,22 @@ test("happy path: a real drawing transforms and counts against quota", async () 
   assert.ok(!JSON.stringify(data).includes(TEST_KEY));
 });
 
+test("transform without a parent session is rejected before any AI call", async () => {
+  const { status, data } = await postTransform({ image: inkDrawing(), language: "pt" });
+  assert.equal(status, 401);
+  assert.equal(data.error, "parent_required");
+  assert.ok(data.message, "a friendly sign-in message is returned");
+  assert.equal(mockCalls.length, 0, "no session must never call fal");
+  // A bogus session token is rejected the same way.
+  const bogus = await postTransform({ image: inkDrawing(), language: "pt" }, "not-a-real-session");
+  assert.equal(bogus.status, 401);
+  assert.equal(bogus.data.error, "parent_required");
+  assert.equal(mockCalls.length, 0);
+});
+
 test("rejects an empty (all-white) drawing before any AI call", async () => {
-  const { status, data } = await postTransform({ image: blankDrawing(), language: "pt" }, "empty-1");
+  const session = await signedInParent("vazio@example.com");
+  const { status, data } = await postTransform({ image: blankDrawing(), language: "pt" }, session);
   assert.equal(status, 400);
   assert.equal(data.error, "empty");
   assert.equal(data.message, "Desenhe alguma coisa primeiro!");
@@ -161,9 +196,10 @@ test("rejects an empty (all-white) drawing before any AI call", async () => {
 });
 
 test("rejects an untouched board reported as strokeCount 0", async () => {
+  const session = await signedInParent("intocado@example.com");
   const { status, data } = await postTransform(
     { image: inkDrawing(), language: "en", strokeCount: 0 },
-    "empty-2"
+    session
   );
   assert.equal(status, 400);
   assert.equal(data.error, "empty");
@@ -172,8 +208,9 @@ test("rejects an untouched board reported as strokeCount 0", async () => {
 });
 
 test("rejects a missing or invalid image", async () => {
+  const session = await signedInParent("invalido@example.com");
   for (const body of [{ language: "pt" }, { image: "not-a-data-url", language: "pt" }, { image: "data:image/png;base64,!!!", language: "pt" }]) {
-    const { status, data } = await postTransform(body, "invalid");
+    const { status, data } = await postTransform(body, session);
     assert.equal(status, 400);
     assert.equal(data.error, "empty");
   }
@@ -183,10 +220,21 @@ test("rejects a missing or invalid image", async () => {
 test("returns the friendly error when FAL_KEY is absent, without calling fal", async (t) => {
   const port = 18700 + Math.floor(Math.random() * 500);
   const child = spawn(process.execPath, [path.join(__dirname, "..", "server.js")], {
-    env: { ...process.env, FAL_KEY: "", PORT: String(port), FAL_ENDPOINT: process.env.FAL_ENDPOINT },
+    env: {
+      ...process.env,
+      FAL_KEY: "",
+      PORT: String(port),
+      FAL_ENDPOINT: process.env.FAL_ENDPOINT,
+      // Test-only: lets this test read the magic-link token from the
+      // child's stdout (default logging never prints it — see
+      // lib/accounts.js). Never set outside tests.
+      RABISCO_TEST_LOG_MAGIC_TOKEN: "1",
+    },
     stdio: ["ignore", "pipe", "pipe"],
   });
   t.after(() => child.kill());
+  let childOut = "";
+  child.stdout.on("data", (d) => (childOut += d.toString()));
   const childBase = `http://127.0.0.1:${port}`;
   // Wait for the child to answer /api/health.
   let up = false;
@@ -200,9 +248,30 @@ test("returns the friendly error when FAL_KEY is absent, without calling fal", a
   }
   assert.ok(up, "child server did not start");
   const callsBefore = mockCalls.length;
+  // Sign in on the child: the token arrives on its stdout.
+  const signup = await fetch(childBase + "/api/parent/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "sem-chave@example.com" }),
+  });
+  assert.equal(signup.status, 200);
+  let token = null;
+  for (let i = 0; i < 20 && !token; i++) {
+    const m = childOut.match(/MAGIC LINK token=([0-9a-f]+)/);
+    if (m) token = m[1];
+    else await new Promise((r) => setTimeout(r, 100));
+  }
+  assert.ok(token, "no magic token in child stdout");
+  const verify = await fetch(childBase + "/api/parent/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  assert.equal(verify.status, 200);
+  const session = (await verify.json()).sessionToken;
   const res = await fetch(childBase + "/api/transform", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-account-id": "no-key" },
+    headers: { "Content-Type": "application/json", "x-parent-session": session },
     body: JSON.stringify({ image: inkDrawing(), language: "pt" }),
   });
   const data = await res.json();
@@ -215,27 +284,29 @@ test("returns the friendly error when FAL_KEY is absent, without calling fal", a
 
 test("enforces one transform in flight per account", async () => {
   mockMode = "delay";
+  const session = await signedInParent("ocupado@example.com");
   const body = { image: inkDrawing(), language: "pt" };
   const [a, b] = await Promise.all([
-    postTransform(body, "busy-account"),
-    postTransform(body, "busy-account"),
+    postTransform(body, session),
+    postTransform(body, session),
   ]);
   const statuses = [a.status, b.status].sort();
   assert.deepEqual(statuses, [200, 429]);
   const busy = a.status === 429 ? a : b;
   assert.equal(busy.data.error, "busy");
   // After the first finishes, the account can transform again.
-  const c = await postTransform(body, "busy-account");
+  const c = await postTransform(body, session);
   assert.equal(c.status, 200);
 });
 
 test("quota: 5 free transforms, then the 6th is blocked", async () => {
+  const session = await signedInParent("cota@example.com");
   for (let i = 0; i < 5; i++) {
-    const r = await postTransform({ image: inkDrawing(), language: "pt" }, "quota-account");
+    const r = await postTransform({ image: inkDrawing(), language: "pt" }, session);
     assert.equal(r.status, 200);
     assert.equal(r.data.remaining, 4 - i);
   }
-  const blocked = await postTransform({ image: inkDrawing(), language: "pt" }, "quota-account");
+  const blocked = await postTransform({ image: inkDrawing(), language: "pt" }, session);
   assert.equal(blocked.status, 402);
   assert.equal(blocked.data.error, "quota");
   assert.equal(mockCalls.length, 5, "blocked transforms must not call fal");

@@ -11,9 +11,12 @@
  * FAL_KEY is read from process.env only. It is never sent to the browser,
  * never logged, and never put in a URL.
  *
- * Quota stub: 5 free transforms per account (in-memory; replace with a
- * database + parent accounts in production). One transform in flight per
- * account. No auto-retry loop. Failures are friendly and do not consume quota.
+ * Access model: only a signed-in parent account can transform. The
+ * drawing screen unlocks after the parent signs in, and the 5 free
+ * transforms are enforced per parent account (in-memory usage map;
+ * replace with a database in production). One transform in flight per
+ * account. No auto-retry loop. Failures are friendly and do not
+ * consume quota.
  */
 "use strict";
 
@@ -55,6 +58,7 @@ const MESSAGES = {
     denied: "Precisa permitir a mágica para continuar.",
     failed: "Ops, a mágica falhou. Tente de novo!",
     quota: "Suas 5 magias grátis acabaram! Peça para um adulto continuar.",
+    signInRequired: "Peça para um adulto entrar com a conta para desenhar.",
     busy: "Já estou fazendo uma mágica! Espere um pouquinho.",
     notConfigured: "A mágica ainda não está ligada. Peça para um adulto verificar.",
     disabled: "A mágica está pausada no momento. Tente de novo mais tarde.",
@@ -65,6 +69,7 @@ const MESSAGES = {
     denied: "Magic needs permission to continue.",
     failed: "Oops, the magic failed. Try again!",
     quota: "Your 5 free magic turns are used up! Ask a grown-up to continue.",
+    signInRequired: "Ask a grown-up to sign in with the parent account to draw.",
     busy: "I'm already doing some magic! Wait a moment.",
     notConfigured: "The magic isn't switched on yet. Ask a grown-up to check.",
     disabled: "The magic is paused right now. Please try again later.",
@@ -75,6 +80,7 @@ const MESSAGES = {
     denied: "La magia necesita permiso para continuar.",
     failed: "¡Ups, la magia falló! Inténtalo de nuevo.",
     quota: "¡Tus 5 magias gratis se acabaron! Pídele a un adulto que continúe.",
+    signInRequired: "Pídele a un adulto que inicie sesión con la cuenta de padres para dibujar.",
     busy: "¡Ya estoy haciendo magia! Espera un momento.",
     notConfigured: "La magia aún no está encendida. Pídele a un adulto que revise.",
     disabled: "La magia está en pausa por ahora. Inténtalo de nuevo más tarde.",
@@ -93,16 +99,12 @@ function msg(req, key) {
 }
 
 // ---------------------------------------------------------------------------
-// Quota stub (in-memory). Production: parent accounts + database.
+// Free-transform quota per parent account (in-memory). Production:
+// move this into the account record in the durable store.
 // ---------------------------------------------------------------------------
-const usage = new Map(); // accountId -> { used: number }
+const usage = new Map(); // parent accountId -> { used: number }
 const inFlight = new Set(); // accountId
 let visionOverride = null; // test-only: set via _testSetVisionOverride
-
-function accountId(req) {
-  // Production: derive from the authenticated parent account.
-  return String(req.get("x-account-id") || "anonymous");
-}
 
 // ---------------------------------------------------------------------------
 // Step 1 — Interpret the drawing (vision).
@@ -404,16 +406,16 @@ app.get("/api/parent/me", (req, res) => {
   });
 });
 
-// Free-transform quota for the caller, so the drawing screen can show
-// how many free transforms are left. Same account resolution as
-// POST /api/transform: a signed-in parent's account wins, otherwise the
-// anonymous device id (x-account-id header). Returns counts only — no
-// account ids, emails or keys. Paid plans have a separate entitlement;
-// this endpoint reports the 5-free quota only.
+// Free-transform quota for the signed-in parent, so the drawing screen
+// can show how many free transforms are left. Parent session required:
+// there is no anonymous quota any more — drawing (and therefore
+// transforming) is only possible after a parent signs in. Returns counts
+// only — no account ids, emails or keys. Paid plans have a separate
+// entitlement; this endpoint reports the 5-free quota only.
 app.get("/api/quota", (req, res) => {
-  const parent = parentAccount(req);
-  const account = parent ? parent.id : accountId(req);
-  const record = usage.get(account) || { used: 0 };
+  const parent = requireParent(req, res);
+  if (!parent) return;
+  const record = usage.get(parent.id) || { used: 0 };
   return res.json({
     ok: true,
     freeTotal: FREE_TRANSFORMS,
@@ -641,9 +643,13 @@ app.get("/api/admin/dashboard", (req, res) => {
 app.post("/api/transform", async (req, res) => {
   const language = langOf(req);
   const image = req.body && req.body.image; // data URL, PNG 512x512
-  // A signed-in parent's account wins; otherwise the anonymous device id.
+  // Parent sign-in is required to draw at all: no session, no
+  // transform, no AI call, no quota consumed.
   const parent = parentAccount(req);
-  const account = parent ? parent.id : accountId(req);
+  if (!parent) {
+    return res.status(401).json({ ok: false, error: "parent_required", message: msg(req, "signInRequired") });
+  }
+  const account = parent.id;
 
   if (metrics.killSwitchOn()) {
     return res.status(503).json({ ok: false, error: "disabled", message: msg(req, "disabled") });
@@ -663,19 +669,16 @@ app.post("/api/transform", async (req, res) => {
 
   // Paid-plan entitlement (Family cap / Magic Pack balance). Free plans
   // fall through to the 5-free quota below.
-  let entitlement = null;
-  if (parent) {
-    entitlement = accounts.checkTransform(parent.id);
-    if (!entitlement.allowed) {
-      return res.status(402).json({ ok: false, error: "quota", message: msg(req, "quota") });
-    }
+  const entitlement = accounts.checkTransform(parent.id);
+  if (!entitlement.allowed) {
+    return res.status(402).json({ ok: false, error: "quota", message: msg(req, "quota") });
   }
 
   const record = usage.get(account) || { used: 0 };
   // A parent with pack / bonus transforms left is not bound by the
   // 5-free quota (referral bonuses are spent like pack transforms).
   const hasPaidBalance =
-    parent && (parent.plan !== "free" || parent.packTransforms > 0 || parent.bonusTransforms > 0);
+    parent.plan !== "free" || parent.packTransforms > 0 || parent.bonusTransforms > 0;
   if (!hasPaidBalance) {
     if (record.used >= FREE_TRANSFORMS) {
       return res.status(402).json({ ok: false, error: "quota", message: msg(req, "quota") });
@@ -741,8 +744,8 @@ app.post("/api/transform", async (req, res) => {
 
     // Store the work server-side (URL only — the device keeps URLs).
     // Best effort: a storage failure must never fail a transform.
-    // Anonymous works (no parent account) get an auto-purge deadline;
-    // parent-account works are kept until the parent deletes them.
+    // Every work belongs to a parent account and is kept until the
+    // parent deletes it (no anonymous works any more).
     let workId = null;
     try {
       const saved = await storage.saveWork(
@@ -753,7 +756,7 @@ app.post("/api/transform", async (req, res) => {
           imageUrl,
           thumb: image,
         },
-        { autoPurge: !parent }
+        { autoPurge: false }
       );
       workId = saved.id;
     } catch (err) {

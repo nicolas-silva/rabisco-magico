@@ -11,7 +11,7 @@ current decisions, to be confirmed by the lawyer before launch.
 | Data | Kept for | Why / notes |
 |---|---|---|
 | Generated image + child's drawing (parent account) | Until the parent deletes it, or the account is closed | The gallery is the product. No automatic expiry while a parent account exists. |
-| Generated image + drawing (anonymous, no parent account) | 90 days from creation (`GALLERY_RETENTION_DAYS`, env) | Anonymous works have no owner to ask. After 90 days they are auto-purged by `scripts/purge-expired.js`. |
+| Generated image + drawing (anonymous, no parent account) | 90 days from creation (`GALLERY_RETENTION_DAYS`, env) | Legacy only: since the parent sign-in requirement, the app no longer creates anonymous works. Works stored before that change still auto-purge after 90 days via `scripts/purge-expired.js`. |
 | Title + phrase for a work | Same as the work itself | They are part of the artwork record, stored with it. |
 | Audit log events | 12 months, then deleted | Long enough to answer "what happened to my gallery?" and to reconcile spend; short enough to limit exposure. Audit events contain only a hashed account id — no child data (see `docs/audit-log-schema.md`). |
 | Aggregate metrics (transform counts, spend estimates) | 13 months | No personal data at all; kept for year-on-year comparison. In-memory in this build, resets on restart. |

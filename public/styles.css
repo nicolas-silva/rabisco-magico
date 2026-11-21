@@ -180,9 +180,10 @@ body {
 .gallery-grid figcaption { padding: 8px; font-weight: 600; font-size: 14px; text-align: center; }
 .gallery-empty { color: #fff; text-align: center; padding: 32px; font-size: 18px; }
 
-/* Parental gate + parent panel (adults only). */
-.gate-body, .parent-panel { padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
-.gate-body p, .parent-panel p { color: #fff; font-size: 18px; }
+/* Parental gate + parent panel (adults only), welcome screen and upgrade gate. */
+.gate-body, .parent-panel, .welcome-body, .upgrade-body { padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.gate-body p, .parent-panel p, .welcome-body p, .upgrade-body p { color: #fff; font-size: 18px; }
+.upgrade-body h2 { color: #fff; font-size: 24px; text-align: center; margin: 8px 0 0; }
 .gate-question { font-size: 40px; font-weight: 700; text-align: center; color: var(--sun); }
 .gate-answers { display: flex; gap: 10px; justify-content: center; }
 .gate-answer { flex: 0 0 84px; }

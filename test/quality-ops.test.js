@@ -204,9 +204,27 @@ test("http: every response carries an X-Request-Id header", async () => {
 });
 
 test("transform failure is captured by the error monitor (NOT_CONFIGURED)", async () => {
+  // A parent session is required to transform; sign in first (no FAL_KEY
+  // is needed for signup), then the transform hits the missing key.
+  const signup = await fetch(baseUrl + "/api/parent/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: "sem-chave@example.com" }),
+  });
+  assert.equal(signup.status, 200);
+  const token = require("../server.js").accounts._testGetMagicToken("sem-chave@example.com");
+  assert.ok(token, "no magic token issued");
+  const verify = await fetch(baseUrl + "/api/parent/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  assert.equal(verify.status, 200);
+  const session = (await verify.json()).sessionToken;
+
   const res = await fetch(baseUrl + "/api/transform", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-account-id": "anon-quality-ops" },
+    headers: { "Content-Type": "application/json", "x-parent-session": session },
     body: JSON.stringify({ image: nonBlankDrawing(), language: "pt", strokeCount: 3 }),
   });
   assert.equal(res.status, 503); // no FAL_KEY in this test process

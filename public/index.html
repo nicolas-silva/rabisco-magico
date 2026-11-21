@@ -16,8 +16,31 @@
 <div class="phone" id="phone">
   <div class="app" id="app">
 
+    <!-- Parent sign-in first: the drawing board stays locked until a
+         parent creates an account and signs in. This is the first
+         screen a visitor sees; the drawing screen starts hidden. -->
+    <section class="screen screen-welcome" id="screen-welcome">
+      <header class="topbar">
+        <h1 data-i18n="title">Rabisco Mágico</h1>
+        <div class="top-actions">
+          <select id="lang-picker-welcome" aria-label="Idioma / Language / Idioma">
+            <option value="pt">PT</option>
+            <option value="en">EN</option>
+            <option value="es">ES</option>
+          </select>
+        </div>
+      </header>
+      <div class="welcome-body">
+        <p data-i18n="welcomeIntro">Os pais criam uma conta grátis primeiro — depois a criança desenha.</p>
+        <p data-i18n="welcomeFree">5 transformações grátis por conta. Sem cartão.</p>
+        <button id="btn-welcome-parents" class="btn btn-primary" data-i18n="welcomeStart">Entrar como pai/mãe</button>
+        <p class="error" id="welcome-error" role="alert" hidden></p>
+      </div>
+      <footer class="app-footer"><a href="landing.html" data-i18n="aboutPricing">Sobre e preços</a></footer>
+    </section>
+
     <!-- Drawing screen -->
-    <section class="screen screen-draw" id="screen-draw">
+    <section class="screen screen-draw" id="screen-draw" hidden>
       <header class="topbar">
         <h1 data-i18n="title">Rabisco Mágico</h1>
         <div class="top-actions">
@@ -136,6 +159,21 @@
           <button id="btn-sign-out" class="btn" data-i18n="signOut">Sair</button>
         </div>
       </div>
+    </section>
+
+    <!-- Upgrade gate: the 5 free transforms for this parent account are
+         used up. Parent-facing: plans live in the parent panel. -->
+    <section class="screen screen-upgrade" id="screen-upgrade" hidden>
+      <header class="topbar">
+        <h1 data-i18n="title">Rabisco Mágico</h1>
+      </header>
+      <div class="upgrade-body">
+        <h2 data-i18n="upgradeTitle">Suas 5 magias grátis acabaram</h2>
+        <p data-i18n="upgradeIntro">Escolha um plano para continuar a mágica — só os pais decidem.</p>
+        <button id="btn-upgrade-plans" class="btn btn-primary" data-i18n="upgradePlans">Ver planos e preços</button>
+        <button id="btn-upgrade-back" class="btn" data-i18n="upgradeBack">Voltar ao desenho</button>
+      </div>
+      <footer class="app-footer"><a href="landing.html" data-i18n="aboutPricing">Sobre e preços</a></footer>
     </section>
 
   </div>

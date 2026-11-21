@@ -16,7 +16,14 @@
     "languageLabel": "Language",
     "madeForMobile": "Made for phones",
     "parents": "Parents",
-    "title": "Rabisco Mágico"
+    "title": "Rabisco Mágico",
+    "upgradeBack": "Back to drawing",
+    "upgradeIntro": "Choose a plan to keep the magic going — parents decide.",
+    "upgradePlans": "See plans & prices",
+    "upgradeTitle": "Your 5 free magic turns are used up",
+    "welcomeFree": "5 free transforms per account. No card needed.",
+    "welcomeIntro": "Parents create a free account first — then your child draws.",
+    "welcomeStart": "Parent sign-in"
   },
   "errors": {
     "busy": "I'm already doing some magic! Wait a moment.",

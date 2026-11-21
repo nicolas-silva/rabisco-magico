@@ -75,9 +75,38 @@ let mockServer;
 let server;
 let baseUrl;
 
-async function getQuota(account) {
+async function getQuota(session) {
   const res = await fetch(baseUrl + "/api/quota", {
-    headers: account ? { "x-account-id": account } : {},
+    headers: session ? { "x-parent-session": session } : {},
+  });
+  return { status: res.status, data: await res.json() };
+}
+
+// A parent account is required for quota: sign up + verify through
+// the real endpoints; the test-only helper reads the magic token.
+async function signedInParent(email) {
+  const signup = await fetch(baseUrl + "/api/parent/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  assert.equal(signup.status, 200);
+  const token = require("../server.js").accounts._testGetMagicToken(email);
+  assert.ok(token, "no magic token issued");
+  const verify = await fetch(baseUrl + "/api/parent/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  assert.equal(verify.status, 200);
+  return (await verify.json()).sessionToken;
+}
+
+async function postTransform(session) {
+  const res = await fetch(baseUrl + "/api/transform", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-parent-session": session },
+    body: JSON.stringify({ image: inkDrawing(), language: "pt" }),
   });
   return { status: res.status, data: await res.json() };
 }
@@ -110,28 +139,40 @@ beforeEach(() => {
 });
 
 test("quota starts at 5 free, 0 used, 5 left", async () => {
-  const { status, data } = await getQuota("quota-ui-fresh");
+  const session = await signedInParent("nova@example.com");
+  const { status, data } = await getQuota(session);
   assert.equal(status, 200);
   assert.deepEqual(data, { ok: true, freeTotal: 5, used: 0, left: 5 });
 });
 
+test("quota without a parent session is rejected", async () => {
+  const { status, data } = await getQuota();
+  assert.equal(status, 401);
+  assert.equal(data.error, "parent_required");
+  const bogus = await getQuota("not-a-real-session");
+  assert.equal(bogus.status, 401);
+  assert.equal(bogus.data.error, "parent_required");
+});
+
 test("quota counts successful transforms and never leaks the key", async () => {
+  const session = await signedInParent("usada@example.com");
   for (let i = 0; i < 2; i++) {
-    const res = await fetch(baseUrl + "/api/transform", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-account-id": "quota-ui-used" },
-      body: JSON.stringify({ image: inkDrawing(), language: "pt" }),
-    });
-    assert.equal(res.status, 200);
+    const r = await postTransform(session);
+    assert.equal(r.status, 200);
   }
-  const { status, data } = await getQuota("quota-ui-used");
+  const { status, data } = await getQuota(session);
   assert.equal(status, 200);
   assert.deepEqual(data, { ok: true, freeTotal: 5, used: 2, left: 3 });
   assert.ok(!JSON.stringify(data).includes(TEST_KEY));
 });
 
-test("quota is per account", async () => {
-  await getQuota("quota-ui-a");
-  const { data } = await getQuota("quota-ui-b");
-  assert.deepEqual(data, { ok: true, freeTotal: 5, used: 0, left: 5 });
+test("quota is per parent account", async () => {
+  const sessionA = await signedInParent("conta-a@example.com");
+  const sessionB = await signedInParent("conta-b@example.com");
+  const used = await postTransform(sessionA);
+  assert.equal(used.status, 200);
+  const { data: a } = await getQuota(sessionA);
+  assert.deepEqual(a, { ok: true, freeTotal: 5, used: 1, left: 4 });
+  const { data: b } = await getQuota(sessionB);
+  assert.deepEqual(b, { ok: true, freeTotal: 5, used: 0, left: 5 });
 });

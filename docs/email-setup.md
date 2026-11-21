@@ -1,10 +1,22 @@
 # Parent magic-link email — setup
 
-Why email wasn't wired: the app created magic-link tokens but had no
-email provider, so the link never left the server and parents had to
-paste a code. The code is now wired (lib/email.js, Resend). It still
-runs in stub mode until you do the steps below — nothing is sent and
-nothing breaks without them.
+## Access model — sign-in is the front door
+
+The drawing page is only available after a parent creates an account
+and signs in. There is no anonymous drawing: `POST /api/transform`
+and `GET /api/quota` both return 401 without a parent session, and the
+5 free transforms are enforced per parent account. When they run out,
+the app shows a parent-facing upgrade gate pointing at the Family plan
+(A$7.99/mo or A$54.99/yr) and the Magic Pack (A$4.99 for 30).
+
+**Current blocker — read this before relying on sign-in:** until the
+steps below are done, sign-in still relies on the paste-the-code
+workaround (the parent copies a token instead of tapping an emailed
+link) and on in-memory accounts (a magic link can land on a Vercel
+instance that never saw the token). Gating the whole app on sign-in
+makes those two gaps load-bearing: Resend (steps 1–3) and the KV store
+(step 4) are now required before the app works reliably for real
+parents, not just nice to have.
 
 ## 1. Create a Resend account
 

@@ -338,9 +338,10 @@ test("cost dashboard: admin token required, returns mock-labelled figures", asyn
   assert.equal(wrong.status, 401);
 
   // One successful transform so the dashboard has something to show.
+  const session = await signedInParent("painel@example.com");
   const t = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "dash-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(t.status, 200);
 
@@ -360,9 +361,10 @@ test("cost dashboard: admin token required, returns mock-labelled figures", asyn
 
 test("kill switch: KILL_SWITCH=1 pauses transforms with a friendly error", async () => {
   process.env.KILL_SWITCH = "1";
+  const session = await signedInParent("pausa@example.com");
   const r = await req("POST", "/api/transform", {
     body: { image: inkDrawing(), language: "pt" },
-    headers: { "x-account-id": "kill-account" },
+    headers: { "x-parent-session": session },
   });
   assert.equal(r.status, 503);
   assert.equal(r.data.error, "disabled");

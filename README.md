@@ -5,8 +5,12 @@ finger, taps **Transformar**, and gets back a realistic AI scene that
 interprets the drawing — with the original drawing shown as a small tilted
 thumbnail in the corner. Then they can download or share the result.
 
-## How it works: Draw → Transform → Share
+## How it works: Sign in → Draw → Transform → Share
 
+0. **Sign in (parent)** — The app opens on a parent sign-in screen:
+   a parent creates a free account (magic link by email) and only then
+   is the drawing board unlocked for the child. Each parent account
+   gets 5 free transforms; after that the app gates to a payment plan.
 1. **Draw** — The child draws with a finger on a white canvas. 12 colours,
    3 brush sizes, an eraser, undo, and clear-all (double-tap to confirm).
    The drawing is stored as stroke data, so undo and resizing never lose work.
@@ -70,7 +74,7 @@ or the deployment bundle:
 - `BLOCKLIST_EXTRA_TERMS` — comma-separated extra blocklist terms, no restart needed (see `lib/blocklist.js`)
 - `OUTPUT_SAFETY_CHECK` — `stub` (default) / `off` / `live` for the output-image safety check (see `lib/output-safety.js`; `live` is not wired yet and fails closed)
 - `AUDIT_LOG_FILE` — optional JSONL audit log path (e.g. `data/audit.jsonl`); `AUDIT_HASH_SALT` — long random salt for hashing account ids in audit events (dev default must be replaced before launch)
-- `GALLERY_RETENTION_DAYS` — auto-purge window for anonymous works, default `90` (see `docs/data-retention.md`)
+- `GALLERY_RETENTION_DAYS` — auto-purge window for legacy anonymous works stored before the parent sign-in requirement, default `90` (see `docs/data-retention.md`)
 - `LOG_LEVEL` — `debug` / `info` (default) / `warn` / `error` for structured JSON-line logs; `LOG_FILE` — optional JSONL log path (e.g. `data/server.jsonl`); `ERROR_LOG_FILE` — optional JSONL error-monitor path (e.g. `data/errors.jsonl`). See `lib/logger.js` and `lib/errors.js`
 - `STORAGE_BACKEND` — `local` (dev) or `s3` (production stub)
 - `PORT` — optional, defaults to 3000
@@ -94,14 +98,24 @@ not wired — do not paste a live secret key. See `lib/stripe.js` and
 ## Parent accounts + parental gate
 
 Parents only — no child accounts, no child personal data. A parent
-signs up with an email (`POST /api/parent/signup`) and gets a magic
-link (`POST /api/parent/verify` returns a session token). **No email
-is sent in this build** — the link is logged server-side only until a
-real email provider is wired. In the PWA, the 🔒 button opens a
-parental gate (a maths question a small child can't answer) that
-guards signup, payment, settings and gallery deletion. A signed-in
-parent can delete the whole gallery (`DELETE /api/gallery`, two-tap
-confirm in the app). See `lib/accounts.js`.
+account is required before anyone can draw: the app opens on a
+parent sign-in screen, and only a signed-in parent unlocks the
+drawing board. A parent signs up with an email (`POST
+/api/parent/signup`) and gets a magic link (`POST /api/parent/verify`
+returns a session token). Email sending is wired via Resend
+(`lib/email.js`) — see `docs/email-setup.md` for the Resend key and
+the Upstash KV store it depends on; until those are set up, sign-in
+falls back to pasting the code and to in-memory accounts. In the PWA,
+the 🔒 button opens a parental gate (a maths question a small child
+can't answer) that guards signup, payment, settings and gallery
+deletion. A signed-in parent can delete the whole gallery (`DELETE
+/api/gallery`, two-tap confirm in the app). See `lib/accounts.js`.
+
+Each parent account gets 5 free transforms (`POST /api/transform`
+and `GET /api/quota` both require a parent session and return 401
+without one). When the 5 are used up, transforms return 402 and the
+app shows a parent-facing upgrade gate pointing at the Family plan
+(A$7.99/mo or A$54.99/yr) and the Magic Pack (A$4.99 for 30).
 
 ## Gallery storage
 
@@ -175,9 +189,11 @@ shell changes.
   `docs/audit-log-schema.md`): transforms and deletions are logged as
   structured events with a hashed account id — never an email, title,
   phrase, image, or any child data.
-- **Retention & deletion** (`docs/data-retention.md`): parent-account
-  works are kept until the parent deletes them; anonymous works
-  auto-purge after 90 days (`scripts/purge-expired.js`); audit logs are
+- **Retention & deletion** (`docs/data-retention.md`): every work
+  belongs to a parent account and is kept until the parent deletes
+  it; the storage layer still auto-purges legacy anonymous works
+  (stored before the sign-in requirement) after 90 days
+  (`scripts/purge-expired.js`); audit logs are
   kept 12 months. Every stored work carries a `retention` record.
 - No child names, photos, birthdays or accounts are collected. Original
   drawings are stored only with parent consent and are deletable.
